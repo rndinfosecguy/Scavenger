@@ -13,3 +13,10 @@ Keep in mind:
 4. I know that I have some false positives and I know that I miss some credentials. So if you think this is crap...ok. leave now. If you have ideas for a better detection, just let me know!
 	
 5. And again: QUICK AND DIRTY! Do not expect nice code.
+
+## Usage
+
+Just start the bot...
+```sh
+python P_bot.py
+```
