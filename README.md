@@ -18,7 +18,15 @@ Keep in mind:
 
 ## Usage
 
-Just start the bot...
+Just start the bot to collect pastes...
 ```sh
 python P_bot.py
+```
+Pastes are stored in data/raw_pastes until they are more then 48000.
+When they are more then 48000 they get filtered, ziped and moved to the archive folder. 
+All pastes which contain credentials are stored in data/files_with_passwords
+
+You can search for proxy logs (URLs with username and password combinations) by using getProxyLogs.py file
+```sh
+python getProxyLogs.py data/raw_pastes
 ```
