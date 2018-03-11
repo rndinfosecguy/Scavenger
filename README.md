@@ -1,5 +1,7 @@
 # Scavenger
 
+[bot in action](https://twitter.com/scr_hyena)
+
 ## Intro
 Just the code of my OSINT bot searching for credentials on Pastebin.
 
