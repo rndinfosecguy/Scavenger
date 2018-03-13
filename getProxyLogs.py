@@ -2,8 +2,14 @@
 
 import os
 import sys
+import argparse
 
-files = os.listdir(sys.argv[1])
+parser = argparse.ArgumentParser(description="Get all URLs with username and password combinations.")
+parser.add_argument("folder", metavar="FOLDER", help='folder to search in')
+
+args = parser.parse_args()
+
+files = os.listdir(args.folder)
 combinations = set()
 count = 1
 
