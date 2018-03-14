@@ -26,7 +26,15 @@ Pastes are stored in data/raw_pastes until they are more then 48000.
 When they are more then 48000 they get filtered, ziped and moved to the archive folder. 
 All pastes which contain credentials are stored in data/files_with_passwords
 
+Keep in mind that at the moment only combinations like USERNAME:PASSWORD and other simple combinations are detected.
+However, there is a tool to search for proxy logs containing credentials. 
+
 You can search for proxy logs (URLs with username and password combinations) by using getProxyLogs.py file
 ```sh
 python getProxyLogs.py data/raw_pastes
+```
+
+If you want to search the raw data for specific strings you can do it using searchRaw.py (really slow). 
+```sh
+python searchRaw.py SEARCHSTRING
 ```
