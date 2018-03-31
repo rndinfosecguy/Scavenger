@@ -57,3 +57,10 @@ If you want to analyze a big amount of pastes I recommend an ELK-Stack.
 ```sh
 python findSensitiveData.py data/raw_pastes 
 ```
+
+---
+
+There are two scripts stalk_user.py/stalk_user_wrapper.py which can be used to monitor a specific twitter user. This means every tweet he posts gets saved and every containing URL gets downloaded. To start the stalker just execute the wrapper.
+```sh
+python stalk_user_wrapper.py
+```
