@@ -49,3 +49,11 @@ To see statistics of the bot just call
 ```sh
 python status.py 
 ```
+
+---
+
+The file findSensitiveData.py searches a folder (with pastes) for sensitive data like credit cards, RSA keys or mysqli_connect strings. Keep in mind that this script uses grep and therefore is really slow on a big amount of paste files. 
+If you want to analyze a big amount of pastes I recommend an ELK-Stack.
+```sh
+python findSensitiveData.py data/raw_pastes 
+```
