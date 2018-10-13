@@ -64,3 +64,14 @@ There are two scripts stalk_user.py/stalk_user_wrapper.py which can be used to m
 ```sh
 python stalk_user_wrapper.py
 ```
+
+---
+
+## To Do
+
+I discovered other sites like Pastebin which allow to read the latest paste and crawl them. I need to integreate them into my bot. If you know additional sites which are worth a look, just let me know.
+```sh
+Examples:
+https://www.paste.org/p/random/paste
+https://slexy.org/recent
+```
