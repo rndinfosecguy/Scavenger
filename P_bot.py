@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+# To Do:
+# 1. Add https://www.paste.org/p/random/paste
+# 2. Add https://slexy.org/recent
+
 import time
 import tweepy
 import os
