@@ -3,7 +3,7 @@
 [bot in action](https://twitter.com/leak_scavenger)
 
 ## Intro
-Just the code of my OSINT bot searching for credentials on Pastebin.
+Just the code of my OSINT bot searching for credentials on different paste sites.
 
 Keep in mind:
 1. This bot is not beautiful. I wrote it quick and dirty and do not care about code conventions or other shit... I will never care about those things.
@@ -18,7 +18,35 @@ Keep in mind:
 
 ## Usage
 
-Just start the bot to collect pastes...
+To learn how to use the software you just need to call the run.py script with the -h/--help argument.
+```sh
+python run.py -h
+```
+Output:
+```sh
+
+  _________
+ /   _____/ ____ _____ ___  __ ____   ____    ____   ___________
+ \_____  \_/ ___\\__  \\  \/ // __ \ /    \  / ___\_/ __ \_  __ \
+ /        \  \___ / __ \\   /\  ___/|   |  \/ /_/  >  ___/|  | \/
+/_______  /\___  >____  /\_/  \___  >___|  /\___  / \___  >__|
+        \/     \/     \/          \/     \//_____/      \/
+
+usage: run.py [-h] [-0] [-1]
+
+Control software for the different modules of this paste crawler.
+
+optional arguments:
+  -h, --help         show this help message and exit
+  -0, --pastebinCOM  Activate Pastebin.com module
+  -1, --pasteORG     Activate Paste.org module (not yet implemented)
+```
+
+So far I only implemented the Pastebin.com module and I am working on Paste.org. I will add more modules and update this script over time.
+
+---
+
+Just start the Pastebin.com module separately (first module I implemented)...
 ```sh
 python P_bot.py
 ```
