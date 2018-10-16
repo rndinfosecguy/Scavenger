@@ -74,4 +74,7 @@ I discovered other sites like Pastebin which allow to read the latest paste and 
 Examples:
 https://www.paste.org/p/random/paste
 https://slexy.org/recent
+http://pastebin.fr
+http://pastebin.es/lists
+http://pastebin.it/archive.php
 ```
