@@ -39,7 +39,7 @@ Control software for the different modules of this paste crawler.
 optional arguments:
   -h, --help         show this help message and exit
   -0, --pastebinCOM  Activate Pastebin.com module
-  -1, --pasteORG     Activate Paste.org module (not yet implemented)
+  -1, --pasteORG     Activate Paste.org module
 ```
 
 So far I only implemented the Pastebin.com module and I am working on Paste.org. I will add more modules and update this script over time.
