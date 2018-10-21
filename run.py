@@ -14,7 +14,7 @@ descr = """
 print descr
 parser = argparse.ArgumentParser(description="Control software for the different modules of this paste crawler.")
 parser.add_argument("-0", "--pastebinCOM", help="Activate Pastebin.com module", action="store_true")
-parser.add_argument("-1", "--pasteORG", help="Activate Paste.org module (not yet implemented)", action="store_true")
+parser.add_argument("-1", "--pasteORG", help="Activate Paste.org module", action="store_true")
 args = parser.parse_args()
 
 if args.pastebinCOM:
