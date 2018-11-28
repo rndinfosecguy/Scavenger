@@ -4,7 +4,7 @@ import httplib2
 import time
 import classes.utility
 
-http = httplib2.Http()
+http = httplib2.Http(disable_ssl_certificate_validation=True)
 tools = classes.utility.ScavUtility()
 
 while True:
