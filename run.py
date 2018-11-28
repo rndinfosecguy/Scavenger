@@ -19,7 +19,7 @@ args = parser.parse_args()
 
 if args.pastebinCOM:
     print "Pastebin.com: starting crawler in new tmux session..."
-    os.system("tmux new -d -s pastebincomCrawler 'P_bot.py'")
+    os.system("tmux new -d -s pastebincomCrawler './P_bot.py'")
 if args.pasteORG:
     print "Paste.org: starting crawler in new tmux session..."
-    os.system("tmux new -d -s pasteorgCrawler 'pasteorg.py'")
+    os.system("tmux new -d -s pasteorgCrawler './pasteorg.py'")
