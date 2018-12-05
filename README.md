@@ -16,6 +16,19 @@ Keep in mind:
 	
 5. And again: QUICK AND DIRTY! Do not expect nice code.
 
+## IMPORTANT
+I recently updated the bot because Pastebin.com started to block my IP as I am scraped their website to gather the information without using their API.
+Now I implemented that at least the pastes itself are downloaded using their API. Therefore I implemented a switch inside the P_bot.py file. To activate the usage of the API you need to edit the run.py file by changing
+
+```sh
+os.system("tmux new -d -s pastebincomCrawler './P_bot.py scrape'")
+```
+to
+```sh
+os.system("tmux new -d -s pastebincomCrawler './P_bot.py api'")
+```
+If you do not enable the API usage you may get blocked by Pastebin.com too. I did not make this change the default configuration because you need a Pastebin.com PRO account to use the API. If you have one you need to whitelist your IP on their website and you will be fine using the API :-) 
+
 ## Usage
 
 To learn how to use the software you just need to call the run.py script with the -h/--help argument.

@@ -7,6 +7,7 @@ import time
 import tweepy
 import os
 import httplib2
+import sys
 from bs4 import BeautifulSoup, SoupStrainer
 
 iterator = 1
@@ -21,6 +22,11 @@ access_secret = ""
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_key, access_secret)
 api = tweepy.API(auth)
+
+if sys.argv[1] == "api":
+	print "[#] Using API to gather pastes."
+else:
+	print "[#] Using website scraping to gather pastes."
 
 while 1:
 	# check if enough files are in raw_pastes
@@ -43,13 +49,21 @@ while 1:
 	http = httplib2.Http()
 	try:
 		status, response = http.request('http://pastebin.com/archive')
+		time.sleep(120)
+		print "[#] Waiting..."
 
 		for link in BeautifulSoup(response, parseOnlyThese=SoupStrainer('a')):
 			if "HTML" not in link:
 				if link.has_attr('href'):
 					if len(link['href']) == 9 and link['href'][0] == '/' and link['href'] != '/messages' and link['href'] != '/settings' and link['href'] != '/scraping':
 						print "[*] Crawling " + link['href']
-						binStatus, binResponse = http.request('http://pastebin.com/raw' + link['href'])
+						if sys.argv[1] != "api":
+							binStatus, binResponse = http.request('http://pastebin.com/raw' + link['href'])
+						else:
+							# Use Pastebin.com API. Remember to whitelist your IP in your pastebin PRO account
+							# This change was implemented because it seems that Pastebin.com recently changed their IP block policy when you simply scrape their site
+							scrapingID = link['href'].replace("/", "")
+							binStatus, binResponse = http.request('http://scrape.pastebin.com/api_scrape_item.php?i=' + scrapingID)
 						try:
 							file_ = open('data/raw_pastes' + link['href'], 'w')
 							file_.write(binResponse)
@@ -78,7 +92,6 @@ while 1:
 							print "[-] File error!"
 							continue
 
-		time.sleep(60)
 		print "++++++++++"
 		print ""
 	except:
