@@ -113,7 +113,6 @@ python stalk_user_wrapper.py
 I discovered other sites like Pastebin which allow to read the latest paste and crawl them. I need to integreate them into my bot. If you know additional sites which are worth a look, just let me know.
 ```sh
 Examples:
-https://www.paste.org/p/random/paste
 https://slexy.org/recent
 http://pastebin.fr
 http://pastebin.es/lists
