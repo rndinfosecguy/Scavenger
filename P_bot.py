@@ -1,8 +1,5 @@
 #!/usr/bin/python
 
-# To Do:
-# 1. Add https://slexy.org/recent
-
 import time
 import tweepy
 import os
