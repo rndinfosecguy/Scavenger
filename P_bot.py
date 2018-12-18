@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+######
+# Code needs to be reworked to make use of built classes
+######
+
 import time
 import tweepy
 import os
