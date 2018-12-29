@@ -3,6 +3,8 @@
 ######
 # Code needs to be reworked to make use of built classes
 ######
+# If you do not want to post results on Twitter remove the lines marked with TWITTER
+######
 
 import time
 import tweepy
@@ -13,16 +15,16 @@ from bs4 import BeautifulSoup, SoupStrainer
 
 iterator = 1
 
-#Twitter API credentials
-consumer_key = ""
-consumer_secret = ""
-access_key = ""
-access_secret = ""
+# Twitter API credentials
+consumer_key = ""  # TWITTER
+consumer_secret = ""  # TWITTER
+access_key = ""  # TWITTER
+access_secret = ""  # TWITTER
 
-#authorize twitter, initialize tweepy
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_key, access_secret)
-api = tweepy.API(auth)
+# authorize twitter, initialize Tweepy
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)  # TWITTER
+auth.set_access_token(access_key, access_secret)  # TWITTER
+api = tweepy.API(auth)  # TWITTER
 
 if sys.argv[1] == "api":
 	print "[#] Using API to gather pastes."
@@ -85,7 +87,7 @@ while 1:
 											skip = 1
 									if skip == 0:
 										print "Found credentials. Posting on twitter..."
-										api.update_status ("")
+										api.update_status("")  # TWITTER
 									#continue
 						
 							time.sleep(2)
