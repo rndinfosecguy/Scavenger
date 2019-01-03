@@ -1,5 +1,13 @@
 # Scavenger
 
+---
+
+automated [Snyk](https://snyk.io/) dependency scan result:
+
+[![Known Vulnerabilities](https://snyk.io/test/github/rndinfosecguy/Scavenger/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/rndinfosecguy/Scavenger?targetFile=requirements.txt)
+
+---
+
 [bot in action](https://twitter.com/leak_scavenger)
 
 ## Intro
