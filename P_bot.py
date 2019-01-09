@@ -11,8 +11,10 @@ import tweepy
 import os
 import httplib2
 import sys
+import classes.utility
 from bs4 import BeautifulSoup, SoupStrainer
 
+tools = classes.utility.ScavUtility()
 iterator = 1
 
 # Twitter API credentials
@@ -68,6 +70,8 @@ while 1:
 							scrapingID = link['href'].replace("/", "")
 							binStatus, binResponse = http.request('http://scrape.pastebin.com/api_scrape_item.php?i=' + scrapingID)
 						try:
+							foundPasswords = 0
+
 							file_ = open('data/raw_pastes' + link['href'], 'w')
 							file_.write(binResponse)
 							file_.close()
@@ -86,10 +90,33 @@ while 1:
 										else:
 											skip = 1
 									if skip == 0:
-										print "Found credentials. Posting on twitter..."
-										api.update_status("")  # TWITTER
-									#continue
-						
+										foundPasswords = 1
+
+							curPasteMySQLi = os.popen("grep mysqli_connect\( data/raw_pastes/" + link['href']).read()
+							curPasteRSA = os.popen("grep 'BEGIN RSA PRIVATE KEY' data/raw_pastes/" + link['href']).read()
+							curPasteWP = os.popen("grep 'The name of the database for WordPress' data/raw_pastes/" + link['href']).read()
+
+							if foundPasswords == 1:
+								foundPasswords = 0
+								print "Found credentials. Posting on Twitter..."
+								api.update_status("")  # TWITTER
+								tools.statisticsaddpoint()
+							elif curPasteRSA != "":
+								print "Found RSA key. Posting on Twitter..."
+								api.update_status("")  # TWITTER
+								tools.statisticsaddpoint()
+								os.system("cp data/raw_pastes/" + link['href'] + " data/rsa_leaks/.")
+							elif curPasteWP != "":
+								print "Found Wordpress configuration file. Posting on Twitter..."
+								api.update_status("")  # TWITTER
+								tools.statisticsaddpoint()
+								os.system("cp data/raw_pastes/" + link['href'] + " data/wordpress_leaks/.")
+							elif curPasteMySQLi != "":
+								print "Found MySQL connect string. Posting on Twitter..."
+								api.update_status("")  # TWITTER
+								tools.statisticsaddpoint()
+								os.system("cp data/raw_pastes/" + link['href'] + " data/mysql_leaks/.")
+
 							time.sleep(2)
 						except:
 							print "[-] File error!"

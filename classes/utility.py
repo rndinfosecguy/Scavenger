@@ -1,7 +1,10 @@
 #!/usr/bin/python
 
 import time
+import datetime
 import os
+from os import listdir
+from os.path import isfile, join
 
 class ScavUtility:
     def __init__(self):
@@ -30,3 +33,19 @@ class ScavUtility:
                 fname = fname[len(fname)-1]
                 os.system("cp " + file + " data/files_with_passwords/" + fname + "_" + site)
 
+    def statisticsaddpoint(self):
+        now = datetime.datetime.now()
+        f = open("statistics/" + str(now.year) + "-" + str(now.month) + "-" + str(now.day), "a+")
+        f.write("0")
+        f.close()
+
+    def statisticscountpoints(self):
+        statisticset = []
+        statisticpath = "statistics"
+        statisticfiles = [f for f in listdir(statisticpath) if isfile(join(statisticpath, f))]
+        for file in statisticfiles:
+            f = open(statisticpath + "/" + file, "r")
+            numberoffindings = len(f.read())
+            fileset = [file, numberoffindings]
+            statisticset.append(fileset)
+        return statisticset

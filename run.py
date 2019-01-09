@@ -2,6 +2,9 @@
 
 import argparse
 import os
+import classes.utility
+
+tools = classes.utility.ScavUtility()
 
 descr = """
   _________                                                      
@@ -23,3 +26,7 @@ if args.pastebinCOM:
 if args.pasteORG:
     print "Paste.org: starting crawler in new tmux session..."
     os.system("tmux new -d -s pasteorgCrawler './pasteorg.py'")
+if args.printStatistic:
+    print "Generating a simple statistic..."
+    statisticvalues = tools.statisticscountpoints()
+    print statisticvalues
