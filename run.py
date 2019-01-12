@@ -3,6 +3,9 @@
 import argparse
 import os
 import classes.utility
+from datetime import datetime
+from datetime import timedelta
+import matplotlib.pyplot as plt
 
 tools = classes.utility.ScavUtility()
 
@@ -27,7 +30,25 @@ if args.pastebinCOM:
 if args.pasteORG:
     print "Paste.org: starting crawler in new tmux session..."
     os.system("tmux new -d -s pasteorgCrawler './pasteorg.py'")
-if args.printStatistic:
+if args.pStatistic:
     print "Generating a simple statistic..."
     statisticvalues = tools.statisticscountpoints()
-    print statisticvalues
+    linelist = []
+    xlabellist = []
+    xlabellistText = []
+    for value in statisticvalues:
+        print str(value[0]) + ": " + str(value[1]) + " breaches"
+        linelist.append(value[1])
+        xlabellist.append(value[0])
+        day = datetime.utcfromtimestamp(value[0]).strftime('%Y-%m-%d')
+        day = datetime.strptime(day, '%Y-%m-%d').date()
+        day += timedelta(days=1)
+        xlabellistText.append(day)
+    print "Generating image..."
+
+    plt.xticks(xlabellist, xlabellistText)
+    plt.plot(xlabellist, linelist)
+    plt.grid(True)
+    plt.title("DETECTED LEAKS PER DAY")
+    plt.ylabel("NUMBER OF LEAKS")
+    plt.show()

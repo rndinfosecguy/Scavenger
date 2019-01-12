@@ -35,17 +35,23 @@ class ScavUtility:
 
     def statisticsaddpoint(self):
         now = datetime.datetime.now()
-        f = open("statistics/" + str(now.year) + "-" + str(now.month) + "-" + str(now.day), "a+")
+        f = open("statistics/" + str(now.day) + "-" + str(now.month) + "-" + str(now.year), "a+")
         f.write("0")
         f.close()
 
     def statisticscountpoints(self):
+        def takeSecond(elem):
+            return elem[0]
+
         statisticset = []
         statisticpath = "statistics"
         statisticfiles = [f for f in listdir(statisticpath) if isfile(join(statisticpath, f))]
-        for file in statisticfiles:
-            f = open(statisticpath + "/" + file, "r")
+        for statfile in statisticfiles:
+            f = open(statisticpath + "/" + statfile, "r")
             numberoffindings = len(f.read())
-            fileset = [file, numberoffindings]
+            statfile = statfile.replace("-", "/")
+            statfile = time.mktime(datetime.datetime.strptime(statfile, "%d/%m/%Y").timetuple())
+            fileset = [statfile, numberoffindings]
             statisticset.append(fileset)
+        statisticset.sort(key=takeSecond)
         return statisticset
