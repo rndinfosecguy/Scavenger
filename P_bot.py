@@ -54,7 +54,7 @@ while 1:
 	http = httplib2.Http()
 	try:
 		status, response = http.request('http://pastebin.com/archive')
-		time.sleep(120)
+		time.sleep(90)
 		print "[#] Waiting..."
 
 		for link in BeautifulSoup(response, parseOnlyThese=SoupStrainer('a')):
@@ -117,7 +117,7 @@ while 1:
 								tools.statisticsaddpoint()
 								os.system("cp data/raw_pastes/" + link['href'] + " data/mysql_leaks/.")
 
-							time.sleep(2)
+							time.sleep(1)
 						except:
 							print "[-] File error!"
 							continue
