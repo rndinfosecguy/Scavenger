@@ -96,6 +96,17 @@ while 1:
 							curPasteRSA = os.popen("grep 'BEGIN RSA PRIVATE KEY' data/raw_pastes/" + link['href']).read()
 							curPasteWP = os.popen("grep 'The name of the database for WordPress' data/raw_pastes/" + link['href']).read()
 
+							# search for onion links
+							containsOnion = 0
+							containsDocument = 0
+							with open("data/raw_pastes/" + link['href']) as f:
+								onionContent = f.readlines()
+							for line in onionContent:
+								if ".onion" in line and len(line) <= 150:
+									containsOnion = 1
+									if ".pdf" in line or ".doc" in line or ".docx" in line or ".xls" in line or ".xlsx" in line:
+										containsDocument = 1
+
 							if foundPasswords == 1:
 								foundPasswords = 0
 								print "Found credentials. Posting on Twitter..."
@@ -116,6 +127,17 @@ while 1:
 								api.update_status("")  # TWITTER
 								tools.statisticsaddpoint()
 								os.system("cp data/raw_pastes/" + link['href'] + " data/mysql_leaks/.")
+							elif containsOnion == 1:
+								if containsDocument == 1:
+									print "Found .onion link to a document. Posting on Twitter..."
+									api.update_status("http://pastebin.com/raw" + link['href'] + " possibly contains onion links to a document (" + str(len(pasteContent)) + " lines) #breach #databreach #infoleak #leak #mysql #hack #pastebin #dataleak")  # TWITTER
+									tools.statisticsaddpoint()
+									os.system("cp data/raw_pastes/" + link['href'] + " data/onion_docs/.")
+								else:
+									print "Found .onion link. Posting on Twitter..."
+									api.update_status("http://pastebin.com/raw" + link['href'] + " possibly contains onion links (" + str(len(pasteContent)) + " lines) #breach #databreach #infoleak #leak #mysql #hack #pastebin #dataleak")  # TWITTER
+									tools.statisticsaddpoint()
+									os.system("cp data/raw_pastes/" + link['href'] + " data/onion/.")
 
 							time.sleep(1)
 						except:
