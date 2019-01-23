@@ -130,12 +130,12 @@ while 1:
 							elif containsOnion == 1:
 								if containsDocument == 1:
 									print "Found .onion link to a document. Posting on Twitter..."
-									api.update_status("http://pastebin.com/raw" + link['href'] + " possibly contains onion links to a document (" + str(len(pasteContent)) + " lines) #breach #databreach #infoleak #leak #mysql #hack #pastebin #dataleak")  # TWITTER
+									api.update_status("")  # TWITTER
 									tools.statisticsaddpoint()
 									os.system("cp data/raw_pastes/" + link['href'] + " data/onion_docs/.")
 								else:
 									print "Found .onion link. Posting on Twitter..."
-									api.update_status("http://pastebin.com/raw" + link['href'] + " possibly contains onion links (" + str(len(pasteContent)) + " lines) #breach #databreach #infoleak #leak #mysql #hack #pastebin #dataleak")  # TWITTER
+									api.update_status("")  # TWITTER
 									tools.statisticsaddpoint()
 									os.system("cp data/raw_pastes/" + link['href'] + " data/onion/.")
 
