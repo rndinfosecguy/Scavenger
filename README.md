@@ -11,7 +11,15 @@ automated [Snyk](https://snyk.io/) dependency scan result:
 [bot in action](https://twitter.com/leak_scavenger)
 
 ## Intro
-Just the code of my OSINT bot searching for credentials on different paste sites.
+Just the code of my OSINT bot searching for sensitive data leaks on different paste sites.
+
+Search terms:
+- credentials
+- private RSA keys
+- Wordpress configuration files
+- MySQL connect strings
+- onion links
+- links to files hosted inside the onion network (PDF, DOC, DOCX, XLS, XLSX)
 
 Keep in mind:
 1. This bot is not beautiful. I wrote it quick and dirty and do not care about code conventions or other shit... I will never care about those things.
