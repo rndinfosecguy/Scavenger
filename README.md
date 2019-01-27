@@ -33,17 +33,32 @@ Keep in mind:
 5. And again: QUICK AND DIRTY! Do not expect nice code.
 
 ## IMPORTANT
-I recently updated the bot because Pastebin.com started to block my IP as I am scraped their website to gather the information without using their API.
-Now I implemented that at least the pastes itself are downloaded using their API. Therefore I implemented a switch inside the P_bot.py file. To activate the usage of the API you need to edit the run.py file by changing
+
+The bot can be run in two major modes:
+- API mode
+- Scraping mode (using TOR)
+
+I highly recommend to use the API mode. It is the intended method of scraping pastes from Pastebin.com and it just fair to do so I think. The only thing you need is a Pastebin.com PRO account and whitelist your public IP on their site.
+
+To start the bot in API mode just run the program in the following way:
 
 ```sh
-os.system("tmux new -d -s pastebincomCrawler './P_bot.py scrape'")
+python run.py -0
 ```
-to
-```sh
-os.system("tmux new -d -s pastebincomCrawler './P_bot.py api'")
+
+However, it is not always possible to use this intended method, as you are might be in NAT mode and therefore you do not have an IP exclusively (whitelisting your IP is not reasonable here). That is the reason I also implemented a scraping mode where fast TOR cycles in combination with reasonable user agents are used to avoid IP blocking and Cloudflare captchas.
+
+To start the bot in scraping mode run it in the following way:
+
+ ```sh
+python run.py -1
 ```
-If you do not enable the API usage you may get blocked by Pastebin.com too. I did not make this change the default configuration because you need a Pastebin.com PRO account to use the API. If you have one you need to whitelist your IP on their website and you will be fine using the API :-) 
+
+Important note: you need the TOR service installed on your system listening on port 9050. Additionally you need to add the following line to your /etc/tor/torrc file.
+ ```sh
+MaxCircuitDirtiness 30
+```
+This sets the maximum cycle time of TOR to 30 seconds.
 
 ## Usage
 
