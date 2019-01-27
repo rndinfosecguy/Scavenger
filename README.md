@@ -76,15 +76,17 @@ Output:
 /_______  /\___  >____  /\_/  \___  >___|  /\___  / \___  >__|
         \/     \/     \/          \/     \//_____/      \/
 
-usage: run.py [-h] [-0] [-1] [-ps]
+usage: run.py [-h] [-0] [-1] [-2] [-ps]
 
 Control software for the different modules of this paste crawler.
 
 optional arguments:
-  -h, --help         show this help message and exit
-  -0, --pastebinCOM  Activate Pastebin.com module
-  -1, --pasteORG     Activate Paste.org module
-  -ps, --pStatistic  Show a simple statistic.
+  -h, --help            show this help message and exit
+  -0, --pastebinCOMapi  Activate Pastebin.com module (using API)
+  -1, --pastebinCOMtor  Activate Pastebin.com module (standard scraping using
+                        TOR to avoid IP blocking)
+  -2, --pasteORG        Activate Paste.org module
+  -ps, --pStatistic     Show a simple statistic.
 ```
 
 So far I only implemented the Pastebin.com module and I am working on Paste.org. I will add more modules and update this script over time.
