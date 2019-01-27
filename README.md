@@ -38,7 +38,7 @@ The bot can be run in two major modes:
 - API mode
 - Scraping mode (using TOR)
 
-I highly recommend to use the API mode. It is the intended method of scraping pastes from Pastebin.com and it just fair to do so I think. The only thing you need is a Pastebin.com PRO account and whitelist your public IP on their site.
+I highly recommend to use the API mode. It is the intended method of scraping pastes from Pastebin.com and it is just fair to do so. The only thing you need is a Pastebin.com PRO account and whitelist your public IP on their site.
 
 To start the bot in API mode just run the program in the following way:
 
@@ -46,7 +46,7 @@ To start the bot in API mode just run the program in the following way:
 python run.py -0
 ```
 
-However, it is not always possible to use this intended method, as you are might be in NAT mode and therefore you do not have an IP exclusively (whitelisting your IP is not reasonable here). That is the reason I also implemented a scraping mode where fast TOR cycles in combination with reasonable user agents are used to avoid IP blocking and Cloudflare captchas.
+However, it is not always possible to use this intended method, as you might be in NAT mode and therefore you do not have an IP exclusively (whitelisting your IP is not reasonable here). That is the reason I also implemented a scraping mode where fast TOR cycles in combination with reasonable user agents are used to avoid IP blocking and Cloudflare captchas.
 
 To start the bot in scraping mode run it in the following way:
 
