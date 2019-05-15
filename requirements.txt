@@ -39,5 +39,5 @@ six==1.12.0
 soupsieve==1.7.3
 subprocess32==3.5.3
 tweepy==3.7.0
-urllib3==1.24.2
+urllib3==1.24.3
 webencodings==0.5.1
