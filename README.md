@@ -32,6 +32,10 @@ Keep in mind:
 	
 5. And again: QUICK AND DIRTY! Do not expect nice code.
 
+## Articles About Scavenger
+- https://jakecreps.com/2019/05/08/osint-collection-tools-for-pastebin/
+- https://jakecreps.com/2019/01/08/scavenger/
+
 ## IMPORTANT
 
 The bot can be run in two major modes:
