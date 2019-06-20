@@ -1,4 +1,4 @@
-# Scavenger
+# Scavenger - OSINT Bot
 
 ---
 
