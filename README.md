@@ -61,7 +61,7 @@ This sets the maximum cycle time of TOR to 30 seconds.
 ## Usage
 
 To learn how to use the software you just need to call the run.py script with the -h/--help argument.
-```sh
+```console
 python3 run.py -h
 ```
 Output:
