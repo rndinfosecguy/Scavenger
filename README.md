@@ -40,7 +40,7 @@ I highly recommend to use the API mode. It is the intended method of scraping pa
 
 To start the bot in API mode just run the program in the following way:
 
-```sh
+```console
 python3 run.py -0
 ```
 
@@ -48,12 +48,12 @@ However, it is not always possible to use this intended method, as you might be 
 
 To start the bot in scraping mode run it in the following way:
 
- ```sh
+ ```console
 python3 run.py -1
 ```
 
 Important note: you need the TOR service installed on your system listening on port 9050. Additionally you need to add the following line to your /etc/tor/torrc file.
- ```sh
+ ```console
 MaxCircuitDirtiness 30
 ```
 This sets the maximum cycle time of TOR to 30 seconds.
@@ -65,7 +65,7 @@ To learn how to use the software you just need to call the run.py script with th
 python3 run.py -h
 ```
 Output:
-```sh
+```console
 
   _________
  /   _____/ ____ _____ ___  __ ____   ____    ____   ___________
@@ -90,7 +90,7 @@ So far I only implemented the Pastebin.com module. I will add more modules and u
 ---
 
 Just start the Pastebin.com module separately (first module I implemented)...
-```sh
+```console
 python3 P_bot.py
 ```
 Pastes are stored in data/raw_pastes until they are more then 48000.
@@ -103,21 +103,21 @@ Keep in mind that at the moment only combinations like USERNAME:PASSWORD and oth
 However, there is a tool to search for proxy logs containing credentials. 
 
 You can search for proxy logs (URLs with username and password combinations) by using getProxyLogs.py file
-```sh
+```console
 python3 getProxyLogs.py data/raw_pastes/
 ```
 
 ---
 
 If you want to search the raw data for specific strings you can do it using searchRaw.py (really slow). 
-```sh
+```console
 python3 searchRaw.py SEARCHSTRING
 ```
 
 ---
 
 To see statistics of the bot just call
-```sh
+```console
 python3 status.py 
 ```
 
@@ -125,14 +125,14 @@ python3 status.py
 
 The file findSensitiveData.py searches a folder (with pastes) for sensitive data like credit cards, RSA keys or mysqli_connect strings. Keep in mind that this script uses grep and therefore is really slow on a big amount of paste files. 
 If you want to analyze a big amount of pastes I recommend an ELK-Stack.
-```sh
+```console
 python3 findSensitiveData.py data/raw_pastes/ 
 ```
 
 ---
 
 There are two scripts stalk_user.py/stalk_user_wrapper.py which can be used to monitor a specific twitter user. This means every tweet he posts gets saved and every containing URL gets downloaded. To start the stalker just execute the wrapper.
-```sh
+```console
 python3 stalk_user_wrapper.py
 ```
 
@@ -141,7 +141,7 @@ python3 stalk_user_wrapper.py
 ## To Do
 
 I discovered other sites like Pastebin which allow to read the latest paste and crawl them. I need to integreate them into my bot. If you know additional sites which are worth a look, just let me know.
-```sh
+```console
 Examples:
 https://slexy.org/recent
 http://pastebin.fr
