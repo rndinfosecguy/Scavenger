@@ -26,7 +26,7 @@ class ScavUtility:
     def getthejuicythings(self, pastefolder, site):
         emailPattern = os.popen("find " + pastefolder + " -type f -print | xargs grep -l -E -o \"\\b[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+\\b:\"").read()
         emailPattern = emailPattern.split("\n")
-        print emailPattern
+        print(emailPattern)
         for file in emailPattern:
             if file != "":
                 fname = file.split("/")

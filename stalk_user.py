@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import tweepy
 import time
 import os
@@ -8,8 +6,8 @@ class MyStreamListener(tweepy.StreamListener):
 	def on_status(self, status):
 		with open("stalking.txt", "a") as myfile:
 			if "RT " not in status.text:
-				print status.text
-    				myfile.write(status.text + "\n")
+				print(status.text)
+				myfile.write(status.text + "\n")
 				link = status.text.split(" ")
 				for l in link:
 					if "https://" in l:

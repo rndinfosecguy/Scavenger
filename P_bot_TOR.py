@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 ######
 # If you do not want to post results on Twitter remove the lines marked with TWITTER
 ######
@@ -30,38 +28,38 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)  # TWITTER
 auth.set_access_token(access_key, access_secret)  # TWITTER
 api = tweepy.API(auth)  # TWITTER
 
-print "[#] Using website scraping to gather pastes. (TOR cycles to avoid IP blocking)"
+print("[#] Using website scraping to gather pastes. (TOR cycles to avoid IP blocking)")
 
 while 1:
 	# test if ready to archive
 	archivepath = "data/raw_pastes"
 	archiveit = tools.testifreadytoarchive(archivepath)
 	if archiveit == 1:
-		print "[*] Get all the pastes with credentials..."
+		print("[*] Get all the pastes with credentials...")
 		tools.getthejuicythings(archivepath, "pastebincom")
-		print "[*] Archiving old Paste.org pastes..."
+		print("[*] Archiving old Paste.org pastes...")
 		tools.archivepastes(archivepath, "pastebincom")
 
-	print str(iterator) + ". iterator:"
+	print(str(iterator) + ". iterator:")
 	iterator += 1
 	try:
 		response = session.get("https://pastebin.com/archive", headers=headers)
 		response = response.text
-		print "[#] Waiting..."
+		print("[#] Waiting...")
 		time.sleep(90)
 
 		for link in BeautifulSoup(response, parse_only=SoupStrainer('a'), features="lxml"):
 			if "HTML" not in link:
 				if link.has_attr('href'):
 					if len(link["href"]) == 9 and link["href"][0] == "/" and link["href"] != "/messages" and link["href"] != "/settings" and link["href"] != "/scraping":
-						print "[*] Crawling " + link["href"]
+						print("[*] Crawling " + link["href"])
 						# I implemented a little fix which currently avoids that your IP gets blocked when simply scraping the website without using the API
 						binResponse = session.get("http://pastebin.com/raw" + link["href"], headers=headers)
 						binResponse = binResponse.text
 						try:
 							foundPasswords = 0
 
-							file_ = open("data/raw_pastes" + link["href"], "w")
+							file_ = open("data/raw_pastes" + link["href"], "wb")
 							file_.write(binResponse.encode('utf-8').strip())
 							file_.close()
 
@@ -98,43 +96,43 @@ while 1:
 
 							if foundPasswords == 1:
 								foundPasswords = 0
-								print "Found credentials. Posting on Twitter..."
+								print("Found credentials. Posting on Twitter...")
 								api.update_status()  # TWITTER
 								tools.statisticsaddpoint()
 							elif curPasteRSA != "":
-								print "Found RSA key. Posting on Twitter..."
+								print("Found RSA key. Posting on Twitter...")
 								api.update_status()  # TWITTER
 								tools.statisticsaddpoint()
 								os.system("cp data/raw_pastes" + link["href"] + " data/rsa_leaks/.")
 							elif curPasteWP != "":
-								print "Found Wordpress configuration file. Posting on Twitter..."
+								print("Found Wordpress configuration file. Posting on Twitter...")
 								api.update_status()  # TWITTER
 								tools.statisticsaddpoint()
 								os.system("cp data/raw_pastes" + link["href"] + " data/wordpress_leaks/.")
 							elif curPasteMySQLi != "":
-								print "Found MySQL connect string. Posting on Twitter..."
+								print("Found MySQL connect string. Posting on Twitter...")
 								api.update_status()  # TWITTER
 								tools.statisticsaddpoint()
 								os.system("cp data/raw_pastes" + link["href"] + " data/mysql_leaks/.")
 							elif containsOnion == 1:
 								if containsDocument == 1:
-									print "Found .onion link to a document. Posting on Twitter..."
+									print("Found .onion link to a document. Posting on Twitter...")
 									api.update_status()  # TWITTER
 									tools.statisticsaddpoint()
 									os.system("cp data/raw_pastes" + link["href"] + " data/onion_docs/.")
 								else:
-									print "Found .onion link. Posting on Twitter..."
+									print("Found .onion link. Posting on Twitter...")
 									api.update_status()  # TWITTER
 									tools.statisticsaddpoint()
 									os.system("cp data/raw_pastes" + link["href"] + " data/onion/.")
 
 							time.sleep(1)
 						except Exception as e:
-							print e
+							print(e)
 							continue
 
-		print "++++++++++"
-		print ""
+		print("++++++++++")
+		print("")
 	except Exception as e:
-		print e
+		print(e)
 		continue

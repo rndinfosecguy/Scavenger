@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 ######
 # If you do not want to post results on Twitter remove the lines marked with TWITTER
 ######
@@ -25,34 +23,34 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)  # TWITTER
 auth.set_access_token(access_key, access_secret)  # TWITTER
 api = tweepy.API(auth)  # TWITTER
 
-print "[#] Using API to gather pastes."
+print("[#] Using API to gather pastes.")
 
 while 1:
 	# test if ready to archive
 	archivepath = "data/raw_pastes"
 	archiveit = tools.testifreadytoarchive(archivepath)
 	if archiveit == 1:
-		print "[*] Get all the pastes with credentials..."
+		print("[*] Get all the pastes with credentials...")
 		tools.getthejuicythings(archivepath, "pastebincom")
-		print "[*] Archiving old Paste.org pastes..."
+		print("[*] Archiving old Paste.org pastes...")
 		tools.archivepastes(archivepath, "pastebincom")
 
-	print str(iterator) + ". iterator:"
+	print(str(iterator) + ". iterator:")
 	iterator += 1
 	http = httplib2.Http()
 	try:
 		status, response = http.request("https://scrape.pastebin.com/api_scraping.php")
-		result =  json.loads(response)
-		print "[#] Waiting..."
+		result =  json.loads(response.decode('utf-8'))
+		print("[#] Waiting...")
 		time.sleep(90)
 
 		for apiPaste in result:
-			print "[*] Crawling " + apiPaste["key"]
+			print("[*] Crawling " + apiPaste["key"])
 			binStatus, binResponse = http.request(apiPaste["scrape_url"])
 			try:
 				foundPasswords = 0
 
-				file_ = open("data/raw_pastes/" + apiPaste["key"], "w")
+				file_ = open("data/raw_pastes/" + apiPaste["key"], "wb")
 				file_.write(binResponse)
 				file_.close()
 
@@ -89,43 +87,43 @@ while 1:
 
 				if foundPasswords == 1:
 					foundPasswords = 0
-					print "Found credentials. Posting on Twitter..."
+					print("Found credentials. Posting on Twitter...")
 					api.update_status()  # TWITTER
 					tools.statisticsaddpoint()
 				elif curPasteRSA != "":
-					print "Found RSA key. Posting on Twitter..."
+					print("Found RSA key. Posting on Twitter...")
 					api.update_status()  # TWITTER
 					tools.statisticsaddpoint()
 					os.system("cp data/raw_pastes/" + apiPaste["key"] + " data/rsa_leaks/.")
 				elif curPasteWP != "":
-					print "Found Wordpress configuration file. Posting on Twitter..."
+					print("Found Wordpress configuration file. Posting on Twitter...")
 					api.update_status()  # TWITTER
 					tools.statisticsaddpoint()
 					os.system("cp data/raw_pastes/" + apiPaste["key"] + " data/wordpress_leaks/.")
 				elif curPasteMySQLi != "":
-					print "Found MySQL connect string. Posting on Twitter..."
+					print("Found MySQL connect string. Posting on Twitter...")
 					api.update_status()  # TWITTER
 					tools.statisticsaddpoint()
 					os.system("cp data/raw_pastes/" + apiPaste["key"] + " data/mysql_leaks/.")
 				elif containsOnion == 1:
 					if containsDocument == 1:
-						print "Found .onion link to a document. Posting on Twitter..."
+						print("Found .onion link to a document. Posting on Twitter...")
 						api.update_status()  # TWITTER
 						tools.statisticsaddpoint()
 						os.system("cp data/raw_pastes/" + apiPaste["key"] + " data/onion_docs/.")
 					else:
-						print "Found .onion link. Posting on Twitter..."
+						print("Found .onion link. Posting on Twitter...")
 						api.update_status()  # TWITTER
 						tools.statisticsaddpoint()
 						os.system("cp data/raw_pastes/" + apiPaste["key"] + " data/onion/.")
 
 				time.sleep(1)
 			except Exception as e:
-				print e
+				print(e)
 				continue
 
-		print "++++++++++"
-		print ""
+		print("++++++++++")
+		print("")
 	except Exception as e:
-		print e
+		print(e)
 		continue
