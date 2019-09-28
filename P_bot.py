@@ -39,10 +39,10 @@ while 1:
 	iterator += 1
 	http = httplib2.Http()
 	try:
-		status, response = http.request("https://scrape.pastebin.com/api_scraping.php")
+		status, response = http.request("https://scrape.pastebin.com/api_scraping.php?limit=100")
 		result =  json.loads(response.decode('utf-8'))
 		print("[#] Waiting...")
-		time.sleep(90)
+		time.sleep(60)
 
 		for apiPaste in result:
 			print("[*] Crawling " + apiPaste["key"])
