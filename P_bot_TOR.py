@@ -54,7 +54,7 @@ while 1:
 					if len(link["href"]) == 9 and link["href"][0] == "/" and link["href"] != "/messages" and link["href"] != "/settings" and link["href"] != "/scraping":
 						print("[*] Crawling " + link["href"])
 						# I implemented a little fix which currently avoids that your IP gets blocked when simply scraping the website without using the API
-						binResponse = session.get("http://pastebin.com/raw" + link["href"], headers=headers)
+						binResponse = session.get("https://pastebin.com/raw" + link["href"], headers=headers)
 						binResponse = binResponse.text
 						try:
 							foundPasswords = 0
