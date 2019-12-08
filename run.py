@@ -19,7 +19,7 @@ print(descr)
 parser = argparse.ArgumentParser(description="Control software for the different modules of this paste crawler.")
 parser.add_argument("-0", "--pastebinCOMapi", help="Activate Pastebin.com module (using API)", action="store_true")
 parser.add_argument("-1", "--pastebinCOMtor", help="Activate Pastebin.com module (standard scraping using TOR to avoid IP blocking)", action="store_true")
-#parser.add_argument("-2", "--pasteORG", help="Activate Paste.org module", action="store_true")
+parser.add_argument("-2", "--pasteORG", help="Activate Paste.org module", action="store_true")
 #parser.add_argument("-ps", "--pStatistic", help="Show a simple statistic.", action="store_true")
 args = parser.parse_args()
 
@@ -29,9 +29,9 @@ if args.pastebinCOMapi:
 if args.pastebinCOMtor:
     print("Pastebin.com (Scraping mode): starting crawler in new tmux session...")
     os.system("tmux new -d -s pastebincomCrawlerTOR 'python3 P_bot_TOR.py'")
-#if args.pasteORG:
-#    print("Paste.org: starting crawler in new tmux session...")
-#    os.system("tmux new -d -s pasteorgCrawler './pasteorg.py'")
+if args.pasteORG:
+    print("Paste.org: starting crawler in new tmux session...")
+    os.system("tmux new -d -s pasteorgCrawler 'python3 pasteorg.py'")
 #if args.pStatistic:
 #    print("Generating a simple statistic...")
 #    statisticvalues = tools.statisticscountpoints()
