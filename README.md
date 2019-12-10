@@ -29,10 +29,11 @@ Keep in mind:
 ## Articles About Scavenger
 - https://jakecreps.com/2019/05/08/osint-collection-tools-for-pastebin/
 - https://jakecreps.com/2019/01/08/scavenger/
+- https://youtu.be/VCwiZ2dh17Q?t=51 (the bot is mentioned here)
 
 ## IMPORTANT
 
-The bot can be run in two major modes:
+For pastebin.com the bot can be run in two major modes:
 - API mode
 - Scraping mode (using TOR)
 
