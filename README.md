@@ -58,6 +58,12 @@ MaxCircuitDirtiness 30
 ```
 This sets the maximum cycle time of TOR to 30 seconds.
 
+To start the module which scrapes random pastes of paste.org just type in the following command:
+
+ ```console
+python3 run.py -2
+```
+
 ## Usage
 
 To learn how to use the software you just need to call the run.py script with the -h/--help argument.
