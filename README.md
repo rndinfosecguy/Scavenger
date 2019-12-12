@@ -110,6 +110,11 @@ All pastes which contain credentials are stored in data/files_with_passwords
 
 ---
 
+The Pastebin.com modules allow you to set notification targets. If you want to use this feature just add the mail addresses you want to observe to the file notification_targets.txt line by line.
+If the bot identifies one of these addresses on Pastebin it will write the name of the paste and the corresponding password to the file notification_results.txt.
+
+---
+
 Keep in mind that at the moment only combinations like USERNAME:PASSWORD and other simple combinations are detected.
 However, there is a tool to search for proxy logs containing credentials. 
 

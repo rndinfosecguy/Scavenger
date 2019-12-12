@@ -10,6 +10,18 @@ class ScavUtility:
     def __init__(self):
         pass
 
+    def checknotificationtargets(self, notificationtargets, curline, pasteid):
+        for item in notificationtargets:
+            item = item.strip()
+            if item in curline:
+                print("[!] Notification for " + curline)
+                now = datetime.datetime.now()
+                f = open("notification_results.txt", "a+")
+                f.write(str(now.day) + "." + str(now.month) + " " + str(now.year) + " - pasteID: " + pasteid + "\n")
+                f.write(curline + "\n")
+                f.write("\n")
+                f.close()
+
     def testifreadytoarchive(self, directory):
         pastecount = len([name for name in os.listdir(directory) if os.path.isfile(os.path.join(directory, name))])
         if pastecount > 48000:

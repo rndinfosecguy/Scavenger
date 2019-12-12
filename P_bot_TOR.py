@@ -30,6 +30,11 @@ api = tweepy.API(auth)  # TWITTER
 
 print("[#] Using website scraping to gather pastes. (TOR cycles to avoid IP blocking)")
 
+# loading notification targets
+with open("notification_targets.txt") as f:
+	notificationtargets = f.readlines()
+print("[#] Loaded " + str(len(notificationtargets)) + " notification targets.")
+
 while 1:
 	# test if ready to archive
 	archivepath = "data/raw_pastes"
@@ -73,7 +78,7 @@ while 1:
 									for line in pasteContent:
 										curLine = line.strip()
 										if (":" in curLine or ";" in curLine or "," in curLine) and "://" not in curLine and len(curLine) <=100 and "android:" not in curLine and "#EXTINF" not in curLine:
-											pass
+											tools.checknotificationtargets(notificationtargets, curLine, apiPaste["key"])
 										else:
 											skip = 1
 									if skip == 0:
