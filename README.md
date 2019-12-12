@@ -97,6 +97,8 @@ So far I implemented modules for the following paste sites:
 * Pastebin.com
 * Paste.org
 
+If you want to observe specific mail addresses just add them to the file notification_targets.txt line by line.
+If the bot identifies one of these addresses on Pastebin it will write the name of the paste and the corresponding password to the file notification_results.txt.
 
 ---
 
@@ -107,11 +109,6 @@ python3 P_bot.py
 Pastes are stored in data/raw_pastes until they are more then 48000.
 When they are more then 48000 they get filtered, ziped and moved to the archive folder. 
 All pastes which contain credentials are stored in data/files_with_passwords
-
----
-
-The Pastebin.com modules allow you to set notification targets. If you want to use this feature just add the mail addresses you want to observe to the file notification_targets.txt line by line.
-If the bot identifies one of these addresses on Pastebin it will write the name of the paste and the corresponding password to the file notification_results.txt.
 
 ---
 
