@@ -78,6 +78,21 @@ while 1:
 						if skip == 0:
 							foundPasswords = 1
 
+				foundSQLdump = 0
+				with open("data/raw_pastes/" + apiPaste["key"]) as f:
+					pasteContent = f.readlines()
+
+				completePaste = ""
+				for line in pasteContent:
+					curLine = line.strip()
+					completePaste += curLine
+
+				if ("insert into" in completePaste or "INSERT INTO" in completePaste) and ("users" in completePaste or "USERS" in completePaste) and len(completePaste) >= 500 and ("<?php" not in completePaste) and ("values" in completePaste or "VALUES" in completePaste):
+					rex = re.compile("INSERT INTO (\S+) \(")
+					rex2 = re.compile("insert into (\S+) \(")
+					if len(rex.findall(completePaste)) > 0 or len(rex2.findall(completePaste)) > 0:
+						foundSQLdump = 1
+
 				curPasteMySQLi = os.popen("grep mysqli_connect\( data/raw_pastes/" + apiPaste["key"]).read()
 				curPasteRSA = os.popen("grep 'BEGIN RSA PRIVATE KEY' data/raw_pastes/" + apiPaste["key"]).read()
 				curPasteWP = os.popen("grep 'The name of the database for WordPress' data/raw_pastes/" + apiPaste["key"]).read()
@@ -93,7 +108,14 @@ while 1:
 						if ".pdf" in line or ".doc" in line or ".docx" in line or ".xls" in line or ".xlsx" in line:
 							containsDocument = 1
 
-				if foundPasswords == 1:
+				if foundSQLdump == 1:
+					foundSQLdump = 0
+					print("Found SQL dump. Posting on Twitter...")
+					tweetText = "http://pastebin.com/raw/" + apiPaste["key"] + " possibly contains a SQL dump (size: " + str(apiPaste["size"]) + ") "
+					api.update_status()  # TWITTER
+					os.system("cp data/raw_pastes/" + apiPaste["key"] + " data/sql_dumps/.")
+					tools.statisticsaddpoint()
+				elif foundPasswords == 1:
 					foundPasswords = 0
 					print("Found credentials. Posting on Twitter...")
 					api.update_status()  # TWITTER

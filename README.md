@@ -14,6 +14,7 @@ Search terms:
 - MySQL connect strings
 - onion links
 - links to files hosted inside the onion network (PDF, DOC, DOCX, XLS, XLSX)
+- SQL dumps
 
 Keep in mind:
 1. This bot is not beautiful. I wrote it quick and dirty and do not care about code conventions or other shit... I will never care about those things.
