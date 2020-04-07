@@ -97,6 +97,7 @@ while 1:
 				curPasteRSA = os.popen("grep 'BEGIN RSA PRIVATE KEY' data/raw_pastes/" + apiPaste["key"]).read()
 				curPasteWP = os.popen("grep 'The name of the database for WordPress' data/raw_pastes/" + apiPaste["key"]).read()
 				curPasteAPIKey = os.popen("grep -i 'apiKey: ' data/raw_pastes/" + apiPaste["key"]).read()
+				curPasteMailContent = os.popen("grep -i 'Return-Path: ' data/raw_pastes/" + apiPaste["key"]).read()
 
 				# search for onion links
 				containsOnion = 0
@@ -125,6 +126,10 @@ while 1:
 					print("Found API key. Posting on Twitter...")
 					api.update_status()  # TWITTER
 					os.system("cp data/raw_pastes/" + apiPaste["key"] + " data/api_leaks/.")
+				elif curPasteMailContent != "":
+					print("Found email content. Posting on Twitter...")
+					api.update_status()  # TWITTER
+					os.system("cp data/raw_pastes/" + apiPaste["key"] + " data/mails_leaks/.")
 				elif curPasteRSA != "":
 					print("Found RSA key. Posting on Twitter...")
 					api.update_status()  # TWITTER
