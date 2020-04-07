@@ -47,7 +47,7 @@ while 1:
 		status, response = http.request("https://scrape.pastebin.com/api_scraping.php?limit=100")
 		result =  json.loads(response.decode('utf-8'))
 		print("[#] Waiting...")
-		time.sleep(60)
+		time.sleep(300)
 
 		for apiPaste in result:
 			if  os.path.exists("data/raw_pastes/" + apiPaste["key"]):
