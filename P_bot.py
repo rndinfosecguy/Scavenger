@@ -93,9 +93,9 @@ while 1:
 					if len(rex.findall(completePaste)) > 0 or len(rex2.findall(completePaste)) > 0:
 						foundSQLdump = 1
 
-				curPasteMySQLi = os.popen("grep mysqli_connect\( data/raw_pastes/" + apiPaste["key"]).read()
-				curPasteRSA = os.popen("grep 'BEGIN RSA PRIVATE KEY' data/raw_pastes/" + apiPaste["key"]).read()
-				curPasteWP = os.popen("grep 'The name of the database for WordPress' data/raw_pastes/" + apiPaste["key"]).read()
+				curPasteMySQLi = os.popen("grep -i mysqli_connect\( data/raw_pastes/" + apiPaste["key"]).read()
+				curPasteRSA = os.popen("grep -i 'BEGIN RSA PRIVATE KEY' data/raw_pastes/" + apiPaste["key"]).read()
+				curPasteWP = os.popen("grep -i 'The name of the database for WordPress' data/raw_pastes/" + apiPaste["key"]).read()
 				curPasteAPIKey = os.popen("grep -i 'apiKey: ' data/raw_pastes/" + apiPaste["key"]).read()
 				curPasteMailContent = os.popen("grep -i 'Return-Path: ' data/raw_pastes/" + apiPaste["key"]).read()
 
