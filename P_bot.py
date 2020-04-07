@@ -96,6 +96,7 @@ while 1:
 				curPasteMySQLi = os.popen("grep mysqli_connect\( data/raw_pastes/" + apiPaste["key"]).read()
 				curPasteRSA = os.popen("grep 'BEGIN RSA PRIVATE KEY' data/raw_pastes/" + apiPaste["key"]).read()
 				curPasteWP = os.popen("grep 'The name of the database for WordPress' data/raw_pastes/" + apiPaste["key"]).read()
+				curPasteAPIKey = os.popen("grep -i 'apiKey: ' data/raw_pastes/" + apiPaste["key"]).read()
 
 				# search for onion links
 				containsOnion = 0
@@ -120,6 +121,10 @@ while 1:
 					print("Found credentials. Posting on Twitter...")
 					api.update_status()  # TWITTER
 					tools.statisticsaddpoint()
+				elif curPasteAPIKey != "":
+					print("Found API key. Posting on Twitter...")
+					api.update_status()  # TWITTER
+					os.system("cp data/raw_pastes/" + apiPaste["key"] + " data/api_leaks/.")
 				elif curPasteRSA != "":
 					print("Found RSA key. Posting on Twitter...")
 					api.update_status()  # TWITTER
