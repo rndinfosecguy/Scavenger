@@ -49,6 +49,8 @@ However, it is not always possible to use this intended method, as you might be 
 
 To start the bot in scraping mode run it in the following way:
 
+!!! THE TOR SCRAPING MODE DOES NOT WORK AT THE MOMENT !!!
+
  ```console
 python3 run.py -1
 ```
