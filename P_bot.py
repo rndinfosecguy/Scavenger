@@ -50,6 +50,9 @@ while 1:
 		time.sleep(60)
 
 		for apiPaste in result:
+			if  os.path.exists("data/raw_pastes/" + apiPaste["key"]):
+				print("[-] " + apiPaste["key"] + " already exists. Skipping...")
+				continue
 			print("[*] Crawling " + apiPaste["key"])
 			binStatus, binResponse = http.request(apiPaste["scrape_url"])
 			try:
