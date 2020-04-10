@@ -162,7 +162,4 @@ I discovered other sites like Pastebin which allow to read the latest paste and 
 ```console
 Examples:
 https://slexy.org/recent
-http://pastebin.fr
-http://pastebin.es/lists
-http://pastebin.it/archive.php
 ```
