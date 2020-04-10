@@ -162,5 +162,5 @@ I discovered other sites like Pastebin which allow to read the latest paste and 
 ```console
 Examples:
 https://slexy.org/recent
-https://ghostbin.co 
+https://ghostbin.co
 ```
