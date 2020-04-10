@@ -17,6 +17,9 @@ for file in rawfiles:
 	curPasteRSA = os.popen("grep -i 'BEGIN RSA PRIVATE KEY' " + raw_paste_folder + file).read()
 	curPasteWP = os.popen("grep -i 'The name of the database for WordPress' " + raw_paste_folder + file).read()
 	curPastePasswords = os.popen("grep -l -E -o \"\\b[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+\\b:\" " + raw_paste_folder + file).read()
+	curPasteMailContent = os.popen("grep -i 'Return-Path: ' " + raw_paste_folder + file).read()
+	curPasteSQLDump = os.popen("grep -i 'insert into' " + raw_paste_folder + file).read()
+	curPasteOnion = os.popen("grep -i '\\.onion' " + raw_paste_folder + file).read()
 
 	if curPaste != "" and ("Mastercard" in curPaste or "mastercard" in curPaste or "MASTERCARD" in curPaste or "visa" in curPaste or "Visa" in curPaste or "VISA" in curPaste):
 		print("[+] " + file + " seems to contain at least one debitcard number. Writing to file...")
@@ -24,6 +27,27 @@ for file in rawfiles:
 			myfile.write("----------\n")
 			myfile.write(file + ":\n")
 			myfile.write(curPaste.strip() + "\n")
+
+	if curPasteMailContent != "":
+		print("[+] " + file + " seems to contain an email. Writing to file...")
+		with open("data/sensitive_scan_results/mails.txt", "a") as myfile:
+			myfile.write("----------\n")
+			myfile.write(file + ":\n")
+			myfile.write(curPasteMailContent.strip() + "\n")
+
+	if curPasteSQLDump != "":
+		print("[+] " + file + " seems to contain a SQL dump. Writing to file...")
+		with open("data/sensitive_scan_results/sqldumps.txt", "a") as myfile:
+			myfile.write("----------\n")
+			myfile.write(file + ":\n")
+			myfile.write(curPasteSQLDump.strip() + "\n")
+
+	if curPasteOnion != "":
+		print("[+] " + file + " seems to contain at least one onion link. Writing to file...")
+		with open("data/sensitive_scan_results/onions.txt", "a") as myfile:
+			myfile.write("----------\n")
+			myfile.write(file + ":\n")
+			myfile.write(curPasteOnion.strip() + "\n")
 
 	if curPasteMysqli != "":
 		print("[+] " + file + " seems to contain a mysqli_connect string. Writing to file...")
