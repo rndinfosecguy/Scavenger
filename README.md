@@ -4,6 +4,12 @@
 
 [bot in action](https://twitter.com/leak_scavenger)
 
+---
+
+[![Anurag's GitHub stats](https://github-readme-stats.vercel.app/api?username=rndinfosecguy)](https://github.com/anuraghazra/github-readme-stats)
+
+---
+
 ## Intro
 Just the code of my OSINT bot searching for sensitive data leaks on different paste sites.
 
