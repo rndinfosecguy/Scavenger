@@ -1,4 +1,4 @@
-# Scavenger - OSINT Bot
+# Scavenger - OSINT Bot - REWORKED
 
 ---
 
@@ -109,12 +109,12 @@ $ python3 pbincomArchiveScrape.py
 
 Pastebin.com user tracker
 ```console
-python3 pbincomTrackUser.py
+$ python3 pbincomTrackUser.py
 ```
 
 Search specific folder for sensitive data:
 ```console
-python3 findSensitiveData.py TARGET_FOLDER
+$ python3 findSensitiveData.py TARGET_FOLDER
 ```
 
 ---
