@@ -1,87 +1,72 @@
+import datetime
 import os
 import sys
 from os import listdir
 from os.path import isfile, join
+import classes.utility
+import colorama
+from colorama import Fore, Style
 
 raw_paste_folder =  sys.argv[1]
-
 rawfiles = [f for f in listdir(raw_paste_folder) if isfile(join(raw_paste_folder, f))]
-print("[+] Fetched files from " + raw_paste_folder)
-
 count = 0
 gCount = 0
+tools = classes.utility.ScavUtility()
+searchTerms = tools.loadSearchTerms()
+
+print(Fore.YELLOW + str(datetime.datetime.now()) + ": [+] Fetched files from " + raw_paste_folder + Style.RESET_ALL)
 
 for file in rawfiles:
-	curPaste = os.popen("grep '\(^\|[^0-9]\)\{1\}\([345]\{1\}[0-9]\{3\}\|6011\)\{1\}[-]\?[0-9]\{4\}[-]\?[0-9]\{2\}[-]\?[0-9]\{2\}-\?[0-9]\{1,4\}\($\|[^0-9]\)\{1\}' " + raw_paste_folder + file).read()
-	curPasteMysqli = os.popen("grep -i mysqli_connect\( " + raw_paste_folder + file).read()
-	curPasteRSA = os.popen("grep -i 'BEGIN RSA PRIVATE KEY' " + raw_paste_folder + file).read()
-	curPasteWP = os.popen("grep -i 'The name of the database for WordPress' " + raw_paste_folder + file).read()
-	curPastePasswords = os.popen("grep -l -E -o \"\\b[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+\\b:\" " + raw_paste_folder + file).read()
-	curPasteMailContent = os.popen("grep -i 'Return-Path: ' " + raw_paste_folder + file).read()
-	curPasteSQLDump = os.popen("grep -i 'insert into' " + raw_paste_folder + file).read()
-	curPasteOnion = os.popen("grep -i '\\.onion' " + raw_paste_folder + file).read()
+	f = open(raw_paste_folder + "/" + file)
+	curFileContent = f.readlines()
+	f.close()
 
-	if curPaste != "" and ("Mastercard" in curPaste or "mastercard" in curPaste or "MASTERCARD" in curPaste or "visa" in curPaste or "Visa" in curPaste or "VISA" in curPaste):
-		print("[+] " + file + " seems to contain at least one debitcard number. Writing to file...")
-		with open("data/sensitive_scan_results/debitcards.txt", "a") as myfile:
-			myfile.write("----------\n")
-			myfile.write(file + ":\n")
-			myfile.write(curPaste.strip() + "\n")
+	foundPassword = 0
+	foundSensitiveData = 0
+	sensitiveValue = ""
 
-	if curPasteMailContent != "":
-		print("[+] " + file + " seems to contain an email. Writing to file...")
-		with open("data/sensitive_scan_results/mails.txt", "a") as myfile:
-			myfile.write("----------\n")
-			myfile.write(file + ":\n")
-			myfile.write(curPasteMailContent.strip() + "\n")
+	for line in curFileContent:
+		line = line.strip()
+		if "@" in line and ":" in line:
+			line = line.split(":")
+			if len(line) == 2:
+				line[0] = line[0].strip()
+				line[1] = line[1].strip()
+				if "@" in line[0]:
+					if tools.check(line[0]) == 1:
+						password = line[1].split(" ")[0]
+						password = password.split("|")[0]
+						if password == "" or len(password) < 4 or len(password) > 40:
+							continue
+						else:
+							foundPassword = 1
+					else:
+						continue
+				else:
+					continue
+			else:
+				continue
 
-	if curPasteSQLDump != "":
-		print("[+] " + file + " seems to contain a SQL dump. Writing to file...")
-		with open("data/sensitive_scan_results/sqldumps.txt", "a") as myfile:
-			myfile.write("----------\n")
-			myfile.write(file + ":\n")
-			myfile.write(curPasteSQLDump.strip() + "\n")
+		for searchItem in searchTerms:
+			if searchItem in line:
+				foundSensitiveData = 1
+				sensitiveValue = searchItem
 
-	if curPasteOnion != "":
-		print("[+] " + file + " seems to contain at least one onion link. Writing to file...")
-		with open("data/sensitive_scan_results/onions.txt", "a") as myfile:
-			myfile.write("----------\n")
-			myfile.write(file + ":\n")
-			myfile.write(curPasteOnion.strip() + "\n")
-
-	if curPasteMysqli != "":
-		print("[+] " + file + " seems to contain a mysqli_connect string. Writing to file...")
-		with open("data/sensitive_scan_results/mysqliconnect.txt", "a") as myfile:
-			myfile.write("----------\n")
-			myfile.write(file + ":\n")
-			myfile.write(curPasteMysqli.strip() + "\n")
-
-	if curPasteRSA != "":
-		print("[+] " + file + " seems to contain a RSA private key. Writing to file...")
-		with open("data/sensitive_scan_results/rsa.txt", "a") as myfile:
-			myfile.write("----------\n")
-			myfile.write(file + ":\n")
-			myfile.write(curPasteRSA.strip() + "\n")
-
-	if curPasteWP != "":
-		print("[+] " + file + " seems to contain a Wordpress config file. Writing to file...")
-		with open("data/sensitive_scan_results/wp.txt", "a") as myfile:
-			myfile.write("----------\n")
-			myfile.write(file + ":\n")
-			myfile.write(curPasteWP.strip() + "\n")
-
-	if curPastePasswords != "":
-		print("[+] " + file + " seems to contain credentials. Writing to file...")
-		with open("data/sensitive_scan_results/pws.txt", "a") as myfile:
-			myfile.write("----------\n")
-			myfile.write(file + ":\n")
-			myfile.write(curPastePasswords.strip() + "\n")
+	if foundPassword == 1:
+		print(Fore.GREEN + str(datetime.datetime.now()) + ": [+] Found credentials. Saving to data/files_with_passwords/" + Style.RESET_ALL)
+		os.system("cp " + raw_paste_folder + "/" + file + " data/files_with_passwords/.")
+		f = open("logs/findSensitiveData_credentials.log", "a")
+		f.write(raw_paste_folder + "/" + file + "\n")
+		f.close()
+	elif foundSensitiveData == 1:
+		print(Fore.GREEN + str(datetime.datetime.now()) + ": [+] Found other sensitive data. Saving to data/otherSensitivePastes/" + Style.RESET_ALL)
+		os.system("cp " + raw_paste_folder + "/" + file + " data/otherSensitivePastes/.")
+		f = open("logs/findSensitiveData_othersensitivedata.log", "a")
+		f.write(raw_paste_folder + "/" + file + " - matched keyword: " + sensitiveValue + "\n")
+		f.close()
 
 	if count == 1000:
 		count = 0
-		print("[+] Proccessed " + str(gCount) + " pastes.")
+		print(Fore.YELLOW + str(datetime.datetime.now()) + "[+] Proccessed " + str(gCount) + " pastes." + Style.RESET_ALL)
 	count += 1
 	gCount += 1
-
-print("")
-print("[+] Detected information stored under data/sensitive_scan_results")
