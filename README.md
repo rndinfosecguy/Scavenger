@@ -79,7 +79,7 @@ control script
 optional arguments:
   -h, --help           show this help message and exit
   -0, --pbincom        Activate pastebin.com archive scraping module
-  -1, --pbincomTrack   Activate pastebin.com user track module
+  -1, --pbincomTrack   Activate pastebin.com user tracking module
   -2, --sensitivedata  Search a specific folder for sensitive data. This might
                        be useful if you want to analyze some pastes which
                        were not collected by the bot.
@@ -97,6 +97,33 @@ Crawled pastes are stored at different locations depending on their status.
 
 Pastes get stored in data/raw_pastes until they reach a limit of 48000 files.
 Once there are more then 48000 pastes they get ziped and moved to the archive folder.
+
+---
+
+Start the pastebin.com archive scraping module
+```console
+$ python3 scavenger.py -0
+```
+Start pastebin.com user tracking module
+```console
+$ python3 scavenger.py -1
+```
+When starting one of these modules, a tmux session with the running module is created in the background.
+
+List tmux sessions
+```console
+$ tmux ls
+pastebincomArchive: 1 windows (created Sun Apr 14 06:33:32 2021) [204x58]
+pastebincomTrack: 1 windows (created Sun Apr 14 06:33:32 2021) [204x58]
+```
+Interact with a tmux session example
+
+```console
+$ tmux a -t pastebincomArchive
+$ tmux a -t pastebincomTrack
+```
+
+To detach from a session hit STRG+b d.
 
 ---
 
