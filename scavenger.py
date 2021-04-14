@@ -17,7 +17,7 @@ descr = Fore.YELLOW + """
 print(descr)
 parser = argparse.ArgumentParser(description="control script", epilog="example usage: python3 " + sys.argv[0] + " -0 -1")
 parser.add_argument("-0", "--pbincom", help="Activate pastebin.com archive scraping module", action="store_true")
-parser.add_argument("-1", "--pbincomTrack", help="Activate pastebin.com user track module", action="store_true")
+parser.add_argument("-1", "--pbincomTrack", help="Activate pastebin.com user tracking module", action="store_true")
 parser.add_argument("-2", "--sensitivedata", help="Search a specific folder for sensitive data. This might be useful if you want to analyze some pastes which were not collected by the bot.", action="store_true")
 parser.add_argument("-3", "--editsearch", help="Edit search terms file for additional search terms (email:password combinations will always be searched)", action="store_true")
 parser.add_argument("-4", "--editusers", help="Edit user file of the pastebin.com user track module", action="store_true")
