@@ -15,7 +15,7 @@ headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 F
 searchTerms = tools.loadSearchTerms()
 
 def getjuicystuff(response):
-	for link in BeautifulSoup(response, parse_only=SoupStrainer('a')):
+	for link in BeautifulSoup(response, 'html.parser', parse_only=SoupStrainer('a')):
 		if "HTML" not in link:
 			if link.has_attr('href'):
 				if len(link["href"]) == 9 and link["href"][0] == "/" and link["href"] != "/messages" and link["href"] != "/settings" and link["href"] != "/scraping":
