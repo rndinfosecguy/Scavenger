@@ -14,7 +14,8 @@ searchTerms = tools.loadSearchTerms()
 
 iterator = 1
 while True:
-	print(str(datetime.datetime.now()) + ": [#] Archiving pastes if necessary...")
+	print(str(datetime.datetime.now()) + ": [#] Archiving pastes...")
+	print()
 	tools.archivepastes("data/raw_pastes")
 
 	print(str(datetime.datetime.now()) + ": [#] " + str(iterator) + ". iterator")
@@ -26,11 +27,12 @@ while True:
 	for user in relevantUsers:
 		try:
 			user = user.strip()
-			print(str(datetime.datetime.now()) + ": [#] Getting pastes for user " + user)
+			print(str(datetime.datetime.now()) + ": [#] Getting pastes for user " + Fore.GREEN + user + Style.RESET_ALL)
 			response = session.get("https://pastebin.com/u/" + user, headers=headers)
 			response = response.text
 
 			skipcount = 0
+			existsCounter = 0
 			for link in BeautifulSoup(response, 'html.parser', parse_only=SoupStrainer('a')):
 				if "HTML" not in link and "html" not in link:
 					if link.has_attr('href'):
@@ -42,7 +44,7 @@ while True:
 							crawled = os.popen('grep -l ' + link['href'].replace("/", "") + ' logs/alreadytrackedpastes.log').read()
 							crawled = crawled.strip()
 							if  crawled != '':
-								print(str(datetime.datetime.now()) + ": [-] " + link["href"] + " already exists. skipping...")
+								existsCounter += 1
 								continue
 
 							# get paste and store it
@@ -96,17 +98,16 @@ while True:
 								print(Fore.GREEN + str(datetime.datetime.now()) + ": [+] Found other sensitive data. Saving to data/otherSensitivePastes/" + Style.RESET_ALL)
 								os.system("cp data/raw_pastes" + link["href"] + " data/otherSensitivePastes/" + sensitiveValue + "_" + link["href"].replace("/", ""))
 
-
 							print(str(datetime.datetime.now()) + ": [#] Waiting 20s till next paste scrape...")
 							time.sleep(20)
+			print(Fore.RED + str(datetime.datetime.now()) + ": [-] Skipped " + str(existsCounter) + " pastes (reason: already crawled)" + Style.RESET_ALL)
 			print(str(datetime.datetime.now()) + ": [#] Waiting 10 minutes till next user check... ")
 			print()
 			time.sleep(600)
 		except Exception as e:
 			print(Fore.RED + str(e) + Style.RESET_ALL)
 
-	print(str(datetime.datetime.now()) + ": +++++++++++")
 	iterator += 1
-	print()
 	print(str(datetime.datetime.now()) + ": [#] Waiting 3 hours till next iteration...")
+	print()
 	time.sleep(10800)

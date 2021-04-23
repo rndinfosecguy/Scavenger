@@ -15,12 +15,13 @@ headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 F
 searchTerms = tools.loadSearchTerms()
 
 def getjuicystuff(response):
+	existsCounter = 0
 	for link in BeautifulSoup(response, 'html.parser', parse_only=SoupStrainer('a')):
 		if "HTML" not in link:
 			if link.has_attr('href'):
 				if len(link["href"]) == 9 and link["href"][0] == "/" and link["href"] != "/messages" and link["href"] != "/settings" and link["href"] != "/scraping":
 					if  os.path.exists("data/raw_pastes" + link["href"]):
-						print(str(datetime.datetime.now()) + ": [-] " + link["href"] + " already exists. Skipping...")
+						existsCounter += 1
 						continue
 					print(Fore.YELLOW + str(datetime.datetime.now()) + ": [*] Crawling " + link["href"] + Style.RESET_ALL)
 					binResponse = session.get("https://pastebin.com/raw" + link["href"], headers=headers, timeout=5)
@@ -76,10 +77,12 @@ def getjuicystuff(response):
 					except Exception as e:
 						print(str(datetime.datetime.now()) + ": [-] " + Fore.RED + str(e) + Style.RESET_ALL)
 						continue
+	print(Fore.RED + str(datetime.datetime.now()) + ": [-] Skipped " + str(existsCounter) + " pastes (reason: already crawled)" + Style.RESET_ALL)
 
 print(str(datetime.datetime.now()) + ": [#] Using slow website scraping to gather pastes")
+print()
 while 1:
-	print(str(datetime.datetime.now()) + ": [#] Archiving pastes if necessary...")
+	print(str(datetime.datetime.now()) + ": [#] Archiving pastes...")
 	tools.archivepastes("data/raw_pastes")
 	print(str(datetime.datetime.now()) + ": [#] " + str(iterator) + ". iterator:")
 	iterator += 1
@@ -88,9 +91,8 @@ while 1:
 		response = response.text
 		time.sleep(5)
 		getjuicystuff(response)
-		print(str(datetime.datetime.now()) + ": ++++++++++++++")
-		print("")
-		print(str(datetime.datetime.now()) + ": [#] Waiting...")
+		print(str(datetime.datetime.now()) + ": [#] Waiting 300 seconds...")
+		print()
 		time.sleep(300)
 	except Exception as e:
 		print(Fore.RED + str(datetime.datetime.now()) + ": CRITICAL ERROR" + Style.RESET_ALL)
