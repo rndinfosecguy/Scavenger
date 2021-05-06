@@ -24,11 +24,11 @@ parser.add_argument("-4", "--editusers", help="Edit user file of the pastebin.co
 args = parser.parse_args()
 
 if args.pbincom:
-	print(Fore.GREEN + "[+] pastebin.com archive scraper: starting crawler in new tmux session..." + Style.RESET_ALL)
+	print(Fore.GREEN + "[+] pastebin.com archive scraper: starting crawler in new tmux session named " + Fore.YELLOW + "pastebincomArchive" + Fore.GREEN + "..." + Style.RESET_ALL)
 	os.system("tmux new -d -s pastebincomArchive 'python3 pbincomArchiveScrape.py'")
 
 if args.pbincomTrack:
-	print(Fore.GREEN + "[+] pastebin.com user track module: starting crawler in new tmux session..." + Style.RESET_ALL)
+	print(Fore.GREEN + "[+] pastebin.com user track module: starting crawler in new tmux session named " + Fore.YELLOW + "pastebincomTrack" + Fore.GREEN + "..." + Style.RESET_ALL)
 	os.system("tmux new -d -s pastebincomTrack 'python3 pbincomTrackUser.py'")
 
 if args.editsearch:
