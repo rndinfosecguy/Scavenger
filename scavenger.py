@@ -1,8 +1,9 @@
 import argparse
 import os
-from colorama import Fore, Style
+from colorama import Fore, Style, init as coloramainit
 import sys
 
+coloramainit() #Needed for Win10/11 Terminal Colors
 descr = Fore.YELLOW + """
   _________
  /   _____/ ____ _____ ___  __ ____   ____    ____   ___________
