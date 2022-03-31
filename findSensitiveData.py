@@ -4,7 +4,7 @@ import sys
 from os import listdir
 from os.path import isfile, join
 import classes.utility
-from colorama import Fore, Style
+from colorama import Fore, Style, init as coloramainit
 
 raw_paste_folder = sys.argv[1]
 rawfiles = [f for f in listdir(raw_paste_folder) if isfile(join(raw_paste_folder, f))]
@@ -12,6 +12,7 @@ count = 0
 gCount = 0
 tools = classes.utility.ScavUtility()
 searchTerms = tools.loadSearchTerms()
+coloramainit() # Needed to fix win10/11 terminal colors
 
 print(Fore.YELLOW + str(datetime.datetime.now()) + ": [+] Fetched files from " + raw_paste_folder + Style.RESET_ALL)
 
