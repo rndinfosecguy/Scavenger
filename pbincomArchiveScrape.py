@@ -5,14 +5,14 @@ import os
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
 import classes.utility
-from colorama import Fore, Style
+from colorama import Fore, Style, init as coloramainit
 
 iterator = 1
 tools = classes.utility.ScavUtility()
 session = requests.session()
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0"}
 searchTerms = tools.loadSearchTerms()
-
+coloramainit() # Needed to fix win10/11 terminal colors
 
 def getjuicystuff(tmpresponse):
     existscounter = 0

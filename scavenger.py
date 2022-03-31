@@ -1,6 +1,6 @@
 import argparse
 import os
-from colorama import Fore, Style
+from colorama import Fore, Style, init as coloramainit
 import sys
 
 descr = Fore.YELLOW + """
@@ -11,6 +11,7 @@ descr = Fore.YELLOW + """
 /_______  /\___  >____  /\_/  \___  >___|  /\___  / \___  >__|
         \/     \/     \/          \/     \//_____/      \/       Reworked
 """ + Style.RESET_ALL
+coloramainit() # Needed to fix win10/11 terminal colors
 print(descr)
 parser = argparse.ArgumentParser(description="control script",
                                  epilog="example usage: python3 " + sys.argv[0] + " -0 -1")
