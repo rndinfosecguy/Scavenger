@@ -1,65 +1,53 @@
 import argparse
 import os
-from colorama import Fore, Style
 import sys
 
-descr = Fore.YELLOW + """
-  _________
- /   _____/ ____ _____ ___  __ ____   ____    ____   ___________
- \_____  \_/ ___\\\\__  \\\\  \/ // __ \ /    \  / ___\_/ __ \_  __ \\
- /        \  \___ / __ \\\\   /\  ___/|   |  \/ /_/  >  ___/|  | \/
-/_______  /\___  >____  /\_/  \___  >___|  /\___  / \___  >__|
-        \/     \/     \/          \/     \//_____/      \/       Reworked
-""" + Style.RESET_ALL
-print(descr)
+from classes.utility import log, panel
+
+panel("Scavenger 2.0",
+      "pastebin credential-leak crawler",
+      "",
+      "  -0  archive scrape module",
+      "  -1  user track module",
+      "  -2  edit search terms",
+      "  -3  edit tracked users",
+      "",
+      "python3 scavenger.py -0 -1  (combine flags)",
+      width=52)
+
 parser = argparse.ArgumentParser(description="control script",
                                  epilog="example usage: python3 " + sys.argv[0] + " -0 -1")
 parser.add_argument("-0", "--pbincom",
-                    help="Activate " + Fore.GREEN + "pastebin.com  archive  scraping " + Style.RESET_ALL + "module",
+                    help="Activate pastebin.com archive scraping module",
                     action="store_true")
 parser.add_argument("-1", "--pbincomTrack",
-                    help="Activate " + Fore.GREEN + "pastebin.com user track " + Style.RESET_ALL + "module",
+                    help="Activate pastebin.com user track module",
                     action="store_true")
-parser.add_argument("-2", "--sensitivedata", help="Search a specific folder for sensitive data. This might be useful "
-                                                  "if you want to analyze some pastes which were not collected by the "
-                                                  "bot.", action="store_true")
-parser.add_argument("-3", "--editsearch",
-                    help="Edit search terms file for additional search terms (email:password combinations will always be searched)",
-                    action="store_true")
-parser.add_argument("-4", "--editusers", help="Edit user file of the pastebin.com user track module",
+parser.add_argument("-2", "--editsearch",
+                     help="Edit search terms file for additional search terms (email:password combinations will always be searched)",
+                     action="store_true")
+parser.add_argument("-3", "--editusers", help="Edit user file of the pastebin.com user track module",
                     action="store_true")
 args = parser.parse_args()
 
 if args.pbincom:
-    print(
-        Fore.GREEN + "[+] pastebin.com archive scraper: starting crawler in new tmux session named " + Fore.YELLOW +
-        "pastebincomArchive" + Fore.GREEN + "..." + Style.RESET_ALL)
+    log("OK", "starting archive crawler in detached tmux session `pastebincomArchive`")
     os.system("tmux new -d -s pastebincomArchive 'python3 pbincomArchiveScrape.py'")
 
 if args.pbincomTrack:
-    print(
-        Fore.GREEN + "[+] pastebin.com user track module: starting crawler in new tmux session named " + Fore.YELLOW
-        + "pastebincomTrack" + Fore.GREEN + "..." + Style.RESET_ALL)
+    log("OK", "starting user-track crawler in detached tmux session `pastebincomTrack`")
     os.system("tmux new -d -s pastebincomTrack 'python3 pbincomTrackUser.py'")
 
 if args.editsearch:
-    if not args.pbincomTrack and not args.pbincom and not args.editusers:
+    if not (args.pbincomTrack or args.pbincom or args.editusers):
         os.system("vi configs/searchterms.txt")
-        print("[#] If you changed anything, do not forget to restart the affected module!")
+        log("WARN", "search terms changed - restart the affected module")
     else:
-        print(Fore.RED + "[-] -3/--editsearch cannot be used with other arguments" + Style.RESET_ALL)
+        log("ERROR", "-2/--editsearch cannot be used with other arguments")
 
 if args.editusers:
-    if not args.pbincomTrack and not args.pbincom and not args.editsearch:
+    if not (args.pbincomTrack or args.pbincom or args.editsearch):
         os.system("vi configs/users.txt")
-        print("[#] If you changed anything, do not forget to restart the affected module!")
+        log("WARN", "tracked users changed - restart the affected module")
     else:
-        print(Fore.RED + "[-] -4/--editusers cannot be used with other arguments" + Style.RESET_ALL)
-
-if args.sensitivedata:
-    print(Fore.BLUE + "[*] Insert full path of the folder you want scan: ")
-    folder = input()
-    print(Style.RESET_ALL)
-    os.system("python3 findSensitiveData.py " + folder)
-
-print()
+        log("ERROR", "-3/--editusers cannot be used with other arguments")

@@ -1,123 +1,104 @@
-import os
-import datetime
+import shutil
 from bs4 import BeautifulSoup, SoupStrainer
 import requests
 import time
 import classes.utility
-from colorama import Fore, Style
+from classes.utility import PASTE_ID_RE, banner, divider, log, panel, sanitize_filename, short
 
 tools = classes.utility.ScavUtility()
 session = requests.session()
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0"}
 searchTerms = tools.loadSearchTerms()
 
+trackedPastes = set()
+try:
+    with open("logs/alreadytrackedpastes.log", "r") as f:
+        trackedPastes = set(line.strip() for line in f if line.strip())
+except IOError:
+    trackedPastes = set()
+
+banner(["pastebincomTrack", "user track - follows configs/users.txt targets",
+        str(len(searchTerms)) + " search terms loaded · email:password detection always on"])
+
 iterator = 1
 while True:
-    print(str(datetime.datetime.now()) + ": [#] Archiving pastes...")
-    print()
+    with open("configs/users.txt", "r") as f:
+        relevantUsers = [line.strip() for line in f if line.strip()]
+
+    divider("track round " + str(iterator))
+    iterator += 1
+
+    log("INFO", "archiving raw_pastes if the fetch threshold is reached")
     tools.archivepastes("data/raw_pastes")
 
-    print(str(datetime.datetime.now()) + ": [#] " + str(iterator) + ". iterator")
-    # read all relevant users
-    with open("configs/users.txt", "r") as f:
-        relevantUsers = f.readlines()
+    if not relevantUsers:
+        log("WARN", "no tracked users in configs/users.txt - add one target per line")
+        log("INFO", "sleeping 3h before the next round")
+        time.sleep(10800)
+        continue
 
-    # go through users and store paste IDs
+    log("INFO", "tracking " + str(len(relevantUsers)) + " user(s): " + ", ".join(relevantUsers))
+
     for user in relevantUsers:
         try:
-            user = user.strip()
-            print(str(datetime.datetime.now()) + ": [#] Getting pastes for user " + Fore.GREEN + user + Style.RESET_ALL)
+            log("INFO", "checking user '" + user + "'")
             response = session.get("https://pastebin.com/u/" + user, headers=headers)
             response = response.text
 
-            skipcount = 0
             existsCounter = 0
+            newcounter = 0
+            hitcounter = 0
             for link in BeautifulSoup(response, 'html.parser', parse_only=SoupStrainer('a')):
-                if "HTML" not in link and "html" not in link:
-                    if link.has_attr('href'):
-                        if len(link["href"]) == 9 and link["href"][0] == "/" and link["href"] != "/messages" and \
-                                link["href"] != "/settings" and link["href"] != "/scraping" and "/u/" not in link[
-                                "href"]:
-                            if skipcount <= 7:
-                                skipcount += 1
-                                continue
-                            # check if paste already scraped
-                            crawled = os.popen(
-                                'grep -l ' + link['href'].replace("/", "") + ' logs/alreadytrackedpastes.log').read()
-                            crawled = crawled.strip()
-                            if crawled != '':
-                                existsCounter += 1
-                                continue
+                paste_id = PASTE_ID_RE.match(link["href"]) if link.has_attr('href') else None
+                if not paste_id:
+                    continue
+                paste_id = paste_id.group(1)
+                # check if paste already scraped
+                if paste_id in trackedPastes:
+                    existsCounter += 1
+                    continue
 
-                            # get paste and store it
-                            print(Fore.YELLOW + str(datetime.datetime.now()) + ": [*] Crawling " + link[
-                                "href"] + Style.RESET_ALL)
-                            curPaste = session.get("https://pastebin.com/raw" + link['href'], headers=headers)
-                            curPaste = curPaste.text
-                            f = open("data/raw_pastes" + link["href"], "w")
-                            f.write(str(curPaste))
-                            f.close()
-                            os.system("echo " + link["href"].replace("/", "") + " >> logs/alreadytrackedpastes.log")
+                log("INFO", "crawling " + paste_id)
+                curPaste = session.get("https://pastebin.com/raw/" + paste_id, headers=headers)
+                pastecontent = curPaste.content.decode('utf-8', errors='replace')
 
-                            # get the juicy stuff
-                            foundPassword = 0
-                            foundSensitiveData = 0
+                matches = tools.analyze_content(pastecontent.splitlines(), searchTerms)
 
-                            f = open("data/raw_pastes" + link["href"], "r")
-                            fiContent = f.readlines()
-                            f.close()
+                pastepath = "data/raw_pastes/" + paste_id
+                f = open(pastepath, "wb")
+                f.write(curPaste.content)
+                f.close()
+                trackedPastes.add(paste_id)
+                newcounter += 1
+                with open("logs/alreadytrackedpastes.log", "a") as f:
+                    f.write(paste_id + "\n")
 
-                            for line in fiContent:
-                                line = line.strip()
-                                if "@" in line and ":" in line:
-                                    line = line.split(":")
-                                    if len(line) == 2:
-                                        line[0] = line[0].strip()
-                                        line[1] = line[1].strip()
-                                        if "@" in line[0]:
-                                            if tools.check(line[0]) == 1:
-                                                password = line[1].split(" ")[0]
-                                                password = password.split("|")[0]
-                                                if password == "" or len(password) < 4 or len(password) > 40:
-                                                    continue
-                                                else:
-                                                    foundPassword = 1
-                                            else:
-                                                continue
-                                        else:
-                                            continue
-                                    else:
-                                        continue
+                for category, value, _ in matches:
+                    log("OK", category + " detected - " + short(value))
 
-                                for searchItem in searchTerms:
-                                    if searchItem in line:
-                                        foundSensitiveData = 1
-                                        sensitiveValue = searchItem
+                passwords = [m for m in matches if m[2] == "passwords"]
+                sensitive = [m for m in matches if m[2] == "sensitive"]
+                if passwords:
+                    hitcounter += 1
+                    log("OK", "credentials saved to data/files_with_passwords/ (" + paste_id + ")")
+                    shutil.copy2(pastepath, "data/files_with_passwords/.")
+                elif sensitive:
+                    hitcounter += 1
+                    label = sanitize_filename(sensitive[0][1])
+                    log("OK", "sensitive data saved to data/otherSensitivePastes/ (" + paste_id + ")")
+                    shutil.copy2(pastepath, "data/otherSensitivePastes/" + label + "_" + paste_id)
 
-                            if foundPassword == 1:
-                                print(Fore.GREEN + str(datetime.datetime.now()) + ": [+] Found credentials. Saving to "
-                                                                                  "data/files_with_passwords/" +
-                                      Style.RESET_ALL)
-                                os.system("cp data/raw_pastes" + link["href"] + " data/files_with_passwords/.")
-                            elif foundSensitiveData == 1:
-                                print(Fore.GREEN + str(
-                                    datetime.datetime.now()) + ": [+] Found other sensitive data. Saving to "
-                                                               "data/otherSensitivePastes/" + Style.RESET_ALL)
-                                os.system("cp data/raw_pastes" + link[
-                                    "href"] + " data/otherSensitivePastes/" + sensitiveValue + "_" + link[
-                                              "href"].replace("/", ""))
+                log("INFO", "sleeping 20s till the next paste")
+                time.sleep(20)
 
-                            print(str(datetime.datetime.now()) + ": [#] Waiting 20s till next paste scrape...")
-                            time.sleep(20)
-            print(Fore.RED + str(datetime.datetime.now()) + ": [-] Skipped " + str(
-                existsCounter) + " pastes (reason: already crawled)" + Style.RESET_ALL)
-            print(str(datetime.datetime.now()) + ": [#] Waiting 10 minutes till next user check... ")
-            print()
+            if existsCounter:
+                log("WARN", "skipped " + str(existsCounter) + " already-crawled pastes for user '" + user + "'")
+            panel("user '" + user + "'",
+               "crawled " + str(newcounter) + " new paste(s), " + str(hitcounter) + " hit(s)",
+               "sleeping 10min before the next user check")
             time.sleep(600)
         except Exception as e:
-            print(Fore.RED + str(e) + Style.RESET_ALL)
+            log("ERROR", "user '" + user + "' failed: " + str(e))
 
-    iterator += 1
-    print(str(datetime.datetime.now()) + ": [#] Waiting 3 hours till next iteration...")
-    print()
+    log("INFO", "sleeping 3h before the next round")
     time.sleep(10800)
