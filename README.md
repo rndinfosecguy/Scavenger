@@ -144,11 +144,6 @@ Pastebin.com user tracker
 $ python3 pbincomTrackUser.py
 ```
 
-Search specific folder for sensitive data:
-```console
-$ python3 findSensitiveData.py TARGET_FOLDER
-```
-
 ---
 
 ## To Do
