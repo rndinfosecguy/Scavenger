@@ -5,13 +5,14 @@ import shutil
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
 import classes.utility
-from classes.utility import PASTE_ID_RE, banner, divider, log, panel, sanitize_filename, short
+from classes.utility import PASTE_ID_RE, DatabaseTracker, banner, divider, log, panel, sanitize_filename, short
 
 iterator = 1
 tools = classes.utility.ScavUtility()
 session = requests.session()
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0"}
 searchTerms = tools.loadSearchTerms()
+tracked = DatabaseTracker("logs/trackedpastes.db")
 
 
 def getjuicystuff(tmpresponse):
@@ -23,8 +24,8 @@ def getjuicystuff(tmpresponse):
         if not paste_id:
             continue
         paste_id = paste_id.group(1)
-        pastepath = "data/raw_pastes/" + paste_id
-        if os.path.exists(pastepath):
+        pastepath = "data/raw_pastes/pastebin/" + paste_id
+        if os.path.exists(pastepath) or tracked.has(paste_id):
             existscounter += 1
             continue
         log("INFO", "crawling " + paste_id)
@@ -38,6 +39,7 @@ def getjuicystuff(tmpresponse):
             file_.write(binresponse.content)
             file_.close()
             newcounter += 1
+            tracked.add(paste_id)
 
             for category, value, _ in matches:
                 log("OK", category + " detected - " + short(value))
@@ -46,13 +48,13 @@ def getjuicystuff(tmpresponse):
             sensitive = [m for m in matches if m[2] == "sensitive"]
             if passwords:
                 hitcounter += 1
-                log("OK", "credentials saved to data/files_with_passwords/ (" + paste_id + ")")
-                shutil.copy2(pastepath, "data/files_with_passwords/.")
+                log("OK", "credentials saved to data/files_with_passwords/pastebin/ (" + paste_id + ")")
+                shutil.copy2(pastepath, "data/files_with_passwords/pastebin/.")
             elif sensitive:
                 hitcounter += 1
                 label = sanitize_filename(sensitive[0][1])
-                log("OK", "sensitive data saved to data/otherSensitivePastes/ (" + paste_id + ")")
-                shutil.copy2(pastepath, "data/otherSensitivePastes/" + label + "_" + paste_id)
+                log("OK", "sensitive data saved to data/otherSensitivePastes/pastebin/ (" + paste_id + ")")
+                shutil.copy2(pastepath, "data/otherSensitivePastes/pastebin/" + label + "_" + paste_id)
 
             time.sleep(random.randint(5, 10))
         except Exception as eErr:
@@ -69,7 +71,7 @@ banner(["pastebincomArchive", "archive scrape - polls https://pastebin.com/archi
 while 1:
     divider("archive pass " + str(iterator))
     log("INFO", "archiving raw_pastes if the fetch threshold is reached")
-    tools.archivepastes("data/raw_pastes")
+    tools.archivepastes("data/raw_pastes/pastebin")
     iterator += 1
     try:
         response = session.get("https://pastebin.com/archive", headers=headers, timeout=5)

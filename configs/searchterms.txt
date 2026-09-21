@@ -6,15 +6,10 @@ Return-Path:
 insert into
 INSERT INTO
 .onion
-AKIA
-ASIA
-ghp_
 github_pat_
 AIza
 sk_live_
 rk_live_
-xoxb-
-SG.
 client_secret
 jdbc:
 mongodb://
@@ -22,5 +17,4 @@ mongodb+srv://
 mysql://
 postgresql://
 redis://
-Bearer
 authorization: basic

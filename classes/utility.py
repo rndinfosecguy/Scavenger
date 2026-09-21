@@ -2,8 +2,10 @@
 
 import datetime
 import os
+import random
 import re
 import shutil
+import sqlite3
 import sys
 import time
 import zipfile
@@ -95,21 +97,11 @@ def progress_bar(current, total, hits):
 
 PASTE_ID_RE = re.compile(r'^/([A-Za-z0-9]{8})(?:\?.*)?$')
 
-USERNAME_PASS_RE = re.compile(r'(?:^|[^A-Za-z0-9._-])([A-Za-z0-9][A-Za-z0-9._-]{2,31}):([^\s,:;@|()"\'\\]+)')
-USERNAME_STOPLIST = {
-    "localhost", "host", "hostname", "host_name", "port", "server", "database", "db",
-    "schema", "scheme", "protocol", "proto", "charset", "encoding", "language", "lang",
-    "name", "title", "note", "value", "text", "body", "subject", "from", "to", "cc",
-    "bcc", "version", "type", "path", "url", "uri", "href", "ref", "user", "username",
-    "login", "email", "password", "passwd", "pwd", "key", "token", "secret", "apikey",
-    "api_key", "created", "updated", "date", "time",
-    "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip",
-    "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15",
-    "eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp",
-    "cs", "ds", "es", "fs", "gs", "ss", "phys", "mem", "virt",
-}
-ALL_HEX_TOKEN_RE = re.compile(r"^[0-9a-fA-F]{9,}$")
-ALL_DIGIT_TOKEN_RE = re.compile(r"^[0-9]{7,}$")
+PRECISE_PATTERNS = [
+    ("AWS access key", re.compile(r'\b((?:AKIA|ASIA)[0-9A-Z]{16})\b')),
+    ("GitHub token", re.compile(r'\b(ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{23,})\b')),
+    ("Slack token", re.compile(r'\b(xox[baprs]-[0-9]{10,12}-[0-9A-Za-z-]{10,}-[0-9A-Za-z-]{20,32})\b')),
+]
 
 
 def short(value, limit=30):
@@ -159,8 +151,8 @@ class ScavUtility:
 
         content: iterable of lines (a str split on newlines works too).
         Returns a list of (category, value, bucket) tuples where bucket is
-        "passwords" or "sensitive". Categories cover email:password pairs,
-        username:password pairs, and substring search terms.
+        "passwords" or "sensitive". Categories cover email:password pairs
+        and substring search terms.
         """
         matches = []
         seen = set()
@@ -188,21 +180,11 @@ class ScavUtility:
                             email_hit = True
                             add("email:password", left + ":" + password, "passwords")
 
-            if ":" in line and not email_hit:
-                m = USERNAME_PASS_RE.search(line)
+            for name, pattern in PRECISE_PATTERNS:
+                m = pattern.search(line)
                 if m:
-                    username = m.group(1)
-                    token = m.group(2)
-                    if (username.lower() not in USERNAME_STOPLIST
-                            and re.search(r"[A-Za-z]", username)
-                            and token[0].isalnum()
-                            and not m.string[m.end():m.end() + 1] == "("
-                            and not token.startswith("//")
-                            and not ALL_HEX_TOKEN_RE.fullmatch(token)
-                            and not ALL_DIGIT_TOKEN_RE.fullmatch(token)
-                            and not (username.isupper() and token.isupper() and token.isalpha())
-                            and 4 <= len(token) <= 40):
-                        add("username:password", username + ":" + token, "passwords")
+                    value = m.group(1) if m.lastindex else m.group(0)
+                    add(name, value, "sensitive")
 
             for search_item in search_terms:
                 if search_item in line:
@@ -211,12 +193,13 @@ class ScavUtility:
         return matches
 
     def archivepastes(self, directory):
+        source = os.path.basename(os.path.normpath(directory))
         pastecount = len([name for name in os.listdir(directory) if os.path.isfile(os.path.join(directory, name))])
         if pastecount > 48000:
-            archivepath = "pastebin_" + str(time.time()) + ".zip"
+            archivepath = source + "_" + str(time.time()) + ".zip"
             suffix = 1
             while os.path.exists(archivepath):
-                archivepath = "pastebin_" + str(time.time()) + "_" + str(suffix) + ".zip"
+                archivepath = source + "_" + str(time.time()) + "_" + str(suffix) + ".zip"
                 suffix += 1
             with zipfile.ZipFile(archivepath, "w", zipfile.ZIP_DEFLATED) as archive:
                 for name in os.listdir(directory):
@@ -228,3 +211,38 @@ class ScavUtility:
                 filepath = os.path.join(directory, name)
                 if os.path.isfile(filepath):
                     os.remove(filepath)
+
+
+class DatabaseTracker:
+    """SQLite-backed dedup tracker for paste IDs. Handles migration from legacy flat files."""
+
+    def __init__(self, db_path, legacy_log=None):
+        self.conn = sqlite3.connect(db_path)
+        self.conn.execute("CREATE TABLE IF NOT EXISTS pastes (id TEXT PRIMARY KEY)")
+        if legacy_log and os.path.exists(legacy_log):
+            self._migrate(legacy_log)
+
+    def _migrate(self, path):
+        with open(path) as f:
+            ids = [line.strip() for line in f if line.strip()]
+        for pid in ids:
+            self.conn.execute("INSERT OR IGNORE INTO pastes VALUES (?)", (pid,))
+        self.conn.commit()
+        os.remove(path)
+        log("OK", "migrated " + os.path.basename(path) + " → " + os.path.basename(self.conn.execute("PRAGMA database").fetchone()[0]))
+
+    def has(self, paste_id):
+        return self.conn.execute("SELECT 1 FROM pastes WHERE id = ?", (paste_id,)).fetchone() is not None
+
+    def add(self, paste_id):
+        self.conn.execute("INSERT OR IGNORE INTO pastes VALUES (?)", (paste_id,))
+        self.conn.commit()
+
+    def load_all(self):
+        return {row[0] for row in self.conn.execute("SELECT id FROM pastes")}
+
+    def count(self):
+        return self.conn.execute("SELECT COUNT(*) FROM pastes").fetchone()[0]
+
+    def close(self):
+        self.conn.close()

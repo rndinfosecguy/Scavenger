@@ -10,6 +10,8 @@
 Just the code of my OSINT bot searching for sensitive data leaks on paste sites.
 email:password combinations are always collected.
 
+It detects sensitive information based on the file `searchterms.txt` and some regexes in `classes/utility.py`.
+
 Search terms:
 ```
 mysqli_connect(
@@ -20,15 +22,10 @@ Return-Path:
 insert into
 INSERT INTO
 .onion
-AKIA
-ASIA
-ghp_
 github_pat_
 AIza
 sk_live_
 rk_live_
-xoxb-
-SG.
 client_secret
 jdbc:
 mongodb://
@@ -36,7 +33,6 @@ mongodb+srv://
 mysql://
 postgresql://
 redis://
-Bearer
 authorization: basic
 ```
 
@@ -52,6 +48,13 @@ Search terms can be customized. You can learn more about it in the configuration
 For pastebin.com the bot has two modes:
 - looking for sensitive data in the archive via scraping
 - looking for sensitive data by tracking users who publish leaks
+
+For pastes.io:
+- tries to guess pastes and looks for sensitive information
+- do not forget to add your api key under `configs/pastesio.json` and set if you have a `free` or `pro` tier
+
+For GitHub Gist:
+- scrapes latest gists and looks for sensitive information
 
 Additional features:
 - customizable search terms
@@ -74,14 +77,16 @@ $ python3 scavenger.py -h
 ╭── Scavenger 2.0 ─────────────────────────────────╮
 │ pastebin credential-leak crawler                 │
 │                                                  │
-│   -0  archive scrape module                      │
-│   -1  user track module                          │
-│   -2  edit search terms                          │
-│   -3  edit tracked users                         │
+│   -0  pastebin archive scrape module             │
+│   -1  pastebin user track module                 │
+│   -2  pastes.io random-ID scraper                │
+│   -3  GitHub gist scraper                        │
+│   -4  edit search terms                          │
+│   -5  edit tracked users                         │
 │                                                  │
 │ python3 scavenger.py -0 -1  (combine flags)      │
 ╰──────────────────────────────────────────────────╯
-usage: scavenger.py [-h] [-0] [-1] [-2] [-3]
+usage: scavenger.py [-h] [-0] [-1] [-2] [-3] [-4] [-5]
 
 control script
 
@@ -89,8 +94,10 @@ options:
   -h, --help          show this help message and exit
   -0, --pbincom       Activate pastebin.com archive scraping module
   -1, --pbincomTrack  Activate pastebin.com user track module
-  -2, --editsearch    Edit search terms file for additional search terms (email:password combinations will always be searched)
-  -3, --editusers     Edit user file of the pastebin.com user track module
+  -2, --pastesio      Activate pastes.io random-ID scraper
+  -3, --githubgist    Activate GitHub gist scraper
+  -4, --editsearch    Edit search terms file for additional search terms (email:password combinations will always be searched)
+  -5, --editusers     Edit user file of the pastebin.com user track module
 
 example usage: python3 scavenger.py -0 -1
 ```

@@ -3,19 +3,14 @@ from bs4 import BeautifulSoup, SoupStrainer
 import requests
 import time
 import classes.utility
-from classes.utility import PASTE_ID_RE, banner, divider, log, panel, sanitize_filename, short
+from classes.utility import PASTE_ID_RE, banner, DatabaseTracker, divider, log, panel, sanitize_filename, short
 
 tools = classes.utility.ScavUtility()
 session = requests.session()
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0"}
 searchTerms = tools.loadSearchTerms()
 
-trackedPastes = set()
-try:
-    with open("logs/alreadytrackedpastes.log", "r") as f:
-        trackedPastes = set(line.strip() for line in f if line.strip())
-except IOError:
-    trackedPastes = set()
+tracked = DatabaseTracker("logs/trackedpastes.db", legacy_log="logs/alreadytrackedpastes.log")
 
 banner(["pastebincomTrack", "user track - follows configs/users.txt targets",
         str(len(searchTerms)) + " search terms loaded · email:password detection always on"])
@@ -29,7 +24,7 @@ while True:
     iterator += 1
 
     log("INFO", "archiving raw_pastes if the fetch threshold is reached")
-    tools.archivepastes("data/raw_pastes")
+    tools.archivepastes("data/raw_pastes/pastebin")
 
     if not relevantUsers:
         log("WARN", "no tracked users in configs/users.txt - add one target per line")
@@ -53,8 +48,7 @@ while True:
                 if not paste_id:
                     continue
                 paste_id = paste_id.group(1)
-                # check if paste already scraped
-                if paste_id in trackedPastes:
+                if tracked.has(paste_id):
                     existsCounter += 1
                     continue
 
@@ -64,14 +58,12 @@ while True:
 
                 matches = tools.analyze_content(pastecontent.splitlines(), searchTerms)
 
-                pastepath = "data/raw_pastes/" + paste_id
+                pastepath = "data/raw_pastes/pastebin/" + paste_id
                 f = open(pastepath, "wb")
                 f.write(curPaste.content)
                 f.close()
-                trackedPastes.add(paste_id)
+                tracked.add(paste_id)
                 newcounter += 1
-                with open("logs/alreadytrackedpastes.log", "a") as f:
-                    f.write(paste_id + "\n")
 
                 for category, value, _ in matches:
                     log("OK", category + " detected - " + short(value))
@@ -80,13 +72,13 @@ while True:
                 sensitive = [m for m in matches if m[2] == "sensitive"]
                 if passwords:
                     hitcounter += 1
-                    log("OK", "credentials saved to data/files_with_passwords/ (" + paste_id + ")")
-                    shutil.copy2(pastepath, "data/files_with_passwords/.")
+                    log("OK", "credentials saved to data/files_with_passwords/pastebin/ (" + paste_id + ")")
+                    shutil.copy2(pastepath, "data/files_with_passwords/pastebin/.")
                 elif sensitive:
                     hitcounter += 1
                     label = sanitize_filename(sensitive[0][1])
-                    log("OK", "sensitive data saved to data/otherSensitivePastes/ (" + paste_id + ")")
-                    shutil.copy2(pastepath, "data/otherSensitivePastes/" + label + "_" + paste_id)
+                    log("OK", "sensitive data saved to data/otherSensitivePastes/pastebin/ (" + paste_id + ")")
+                    shutil.copy2(pastepath, "data/otherSensitivePastes/pastebin/" + label + "_" + paste_id)
 
                 log("INFO", "sleeping 20s till the next paste")
                 time.sleep(20)
