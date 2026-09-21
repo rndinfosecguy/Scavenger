@@ -1,4 +1,5 @@
 # Scavenger - OSINT Bot - 3.0
+![image](scavenger_logo.jpg)
 
 ---
 
