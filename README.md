@@ -61,6 +61,7 @@ Additional features:
 
 ## Configuration
 
+0. Execute `setup.sh` to install are needed non standard python libraries
 1. Delete the README.md files in every subfolder as they are only placeholders 
 2. The bot searches for email:password combinations and other kinds sensitive data by default. If you want to add more search terms edit the __configs/searchterms.txt__ file or use the -2 switch in the control script
 Default __configs/searchterms.txt__ configuration:
