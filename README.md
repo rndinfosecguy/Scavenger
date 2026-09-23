@@ -3,7 +3,7 @@
 
 ---
 
-[bot in action](https://twitter.com/leak_scavenger) (currently not running)
+[bot in action](https://twitter.com/leak_scavenger) 
 
 ---
 
@@ -76,7 +76,7 @@ You know a useful search terms which is missing here? Tell me! :-)
 Program help:
 ```console
 $ python3 scavenger.py -h
-╭── Scavenger 2.0 ─────────────────────────────────╮
+╭── Scavenger 3.0 ─────────────────────────────────╮
 │ pastebin credential-leak crawler                 │
 │                                                  │
 │   -0  pastebin archive scrape module             │
