@@ -26,7 +26,7 @@ HEADERS = {}
 if API_KEY:
     HEADERS["Authorization"] = "Bearer " + API_KEY
 
-tried = DatabaseTracker("logs/triedpastesio.db")
+tried = DatabaseTracker("logs/tracker.db", table="tried_pastesio")
 CHARS = string.ascii_letters + string.digits
 
 
@@ -55,7 +55,6 @@ def handle(response):
         log("OK", "hit — " + paste_id)
         with open(pastepath, "w") as f:
             f.write(content)
-        tried.add(paste_id)
 
         matches = tools.analyze_content(content.splitlines(), searchTerms)
         for category, value, _ in matches:
@@ -70,6 +69,7 @@ def handle(response):
             label = sanitize_filename(sensitive[0][1])
             log("OK", "sensitive data saved to data/otherSensitivePastes/pastesio/ (" + paste_id + ")")
             shutil.copy2(pastepath, "data/otherSensitivePastes/pastesio/" + label + "_" + paste_id)
+        tried.add(paste_id)
 
         return True
 

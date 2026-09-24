@@ -1,6 +1,4 @@
 mysqli_connect(
-BEGIN RSA PRIVATE KEY
------BEGIN
 The name of the database for WordPress
 Return-Path:
 insert into

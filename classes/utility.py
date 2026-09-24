@@ -2,11 +2,9 @@
 
 import datetime
 import os
-import random
 import re
 import shutil
 import sqlite3
-import sys
 import time
 import zipfile
 
@@ -81,26 +79,16 @@ def panel(title, *lines, width=None):
     print(Style.DIM + "╰" + "─" * (cols - 2) + "╯" + Style.RESET_ALL)
 
 
-def progress_bar(current, total, hits):
-    """Draw a colorized progress bar in place."""
-    cols = shutil.get_terminal_size().columns
-    bar_width = max(10, cols - 42)
-    pct = current / total if total > 0 else 0
-    filled = int(bar_width * pct)
-    bar = "█" * filled + "░" * (bar_width - filled)
-    sys.stdout.write(
-        "\r" + Style.DIM + bar + Style.RESET_ALL + " "
-        + Fore.CYAN + "{:3.0f}%".format(pct * 100) + Style.RESET_ALL + " "
-        + Style.DIM + str(current) + "/" + str(total) + " files · " + str(hits) + " hit(s)" + Style.RESET_ALL + "  ")
-    sys.stdout.flush()
-
-
 PASTE_ID_RE = re.compile(r'^/([A-Za-z0-9]{8})(?:\?.*)?$')
 
 PRECISE_PATTERNS = [
     ("AWS access key", re.compile(r'\b((?:AKIA|ASIA)[0-9A-Z]{16})\b')),
     ("GitHub token", re.compile(r'\b(ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{23,})\b')),
     ("Slack token", re.compile(r'\b(xox[baprs]-[0-9]{10,12}-[0-9A-Za-z-]{10,}-[0-9A-Za-z-]{20,32})\b')),
+    ("private key header", re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH |ENCRYPTED |DSA )?PRIVATE KEY-----')),
+    ("password assignment", re.compile(r'\b(?:passwd|password)\s*[:=]\s*([^\s,:;@]{6,})', re.IGNORECASE)),
+    ("API key assignment", re.compile(r'\bapi[_-]?key\s*[:=]\s*([^\s,:;@]{6,})', re.IGNORECASE)),
+    ("secret assignment", re.compile(r'\bsecret\s*[:=]\s*([^\s,:;@]{6,})', re.IGNORECASE)),
 ]
 
 
@@ -124,9 +112,6 @@ class ScavUtility:
     EMAIL_REGEX = re.compile(
         r'^(?=.{1,64}@)[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(\.[A-Za-z]{2,})$'
     )
-
-    def __init__(self):
-        pass
 
     def check(self, email):
         if self.EMAIL_REGEX.search(email):
@@ -176,7 +161,7 @@ class ScavUtility:
                     right = parts[1].strip()
                     if left and "@" in left and self.check(left) == 1:
                         password = right.split(" ")[0].split("|")[0]
-                        if 4 <= len(password) <= 40:
+                        if 4 <= len(password) <= 40 and not password.startswith(("/", "~")):
                             email_hit = True
                             add("email:password", left + ":" + password, "passwords")
 
@@ -216,9 +201,10 @@ class ScavUtility:
 class DatabaseTracker:
     """SQLite-backed dedup tracker for paste IDs. Handles migration from legacy flat files."""
 
-    def __init__(self, db_path, legacy_log=None):
+    def __init__(self, db_path, table="pastes", legacy_log=None):
+        self.table = table
         self.conn = sqlite3.connect(db_path)
-        self.conn.execute("CREATE TABLE IF NOT EXISTS pastes (id TEXT PRIMARY KEY)")
+        self.conn.execute("CREATE TABLE IF NOT EXISTS " + table + " (id TEXT PRIMARY KEY)")
         if legacy_log and os.path.exists(legacy_log):
             self._migrate(legacy_log)
 
@@ -226,23 +212,14 @@ class DatabaseTracker:
         with open(path) as f:
             ids = [line.strip() for line in f if line.strip()]
         for pid in ids:
-            self.conn.execute("INSERT OR IGNORE INTO pastes VALUES (?)", (pid,))
+            self.conn.execute("INSERT OR IGNORE INTO " + self.table + " VALUES (?)", (pid,))
         self.conn.commit()
         os.remove(path)
         log("OK", "migrated " + os.path.basename(path) + " → " + os.path.basename(self.conn.execute("PRAGMA database").fetchone()[0]))
 
     def has(self, paste_id):
-        return self.conn.execute("SELECT 1 FROM pastes WHERE id = ?", (paste_id,)).fetchone() is not None
+        return self.conn.execute("SELECT 1 FROM " + self.table + " WHERE id = ?", (paste_id,)).fetchone() is not None
 
     def add(self, paste_id):
-        self.conn.execute("INSERT OR IGNORE INTO pastes VALUES (?)", (paste_id,))
+        self.conn.execute("INSERT OR IGNORE INTO " + self.table + " VALUES (?)", (paste_id,))
         self.conn.commit()
-
-    def load_all(self):
-        return {row[0] for row in self.conn.execute("SELECT id FROM pastes")}
-
-    def count(self):
-        return self.conn.execute("SELECT COUNT(*) FROM pastes").fetchone()[0]
-
-    def close(self):
-        self.conn.close()

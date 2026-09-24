@@ -12,7 +12,7 @@ tools = classes.utility.ScavUtility()
 session = requests.session()
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0"}
 searchTerms = tools.loadSearchTerms()
-tracked = DatabaseTracker("logs/trackedpastes.db")
+tracked = DatabaseTracker("logs/tracker.db", table="crawled")
 
 
 def getjuicystuff(tmpresponse):
@@ -39,7 +39,6 @@ def getjuicystuff(tmpresponse):
             file_.write(binresponse.content)
             file_.close()
             newcounter += 1
-            tracked.add(paste_id)
 
             for category, value, _ in matches:
                 log("OK", category + " detected - " + short(value))
@@ -55,6 +54,7 @@ def getjuicystuff(tmpresponse):
                 label = sanitize_filename(sensitive[0][1])
                 log("OK", "sensitive data saved to data/otherSensitivePastes/pastebin/ (" + paste_id + ")")
                 shutil.copy2(pastepath, "data/otherSensitivePastes/pastebin/" + label + "_" + paste_id)
+            tracked.add(paste_id)
 
             time.sleep(random.randint(5, 10))
         except Exception as eErr:

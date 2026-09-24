@@ -10,7 +10,7 @@ session = requests.session()
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0"}
 searchTerms = tools.loadSearchTerms()
 
-tracked = DatabaseTracker("logs/trackedpastes.db", legacy_log="logs/alreadytrackedpastes.log")
+tracked = DatabaseTracker("logs/tracker.db", table="crawled", legacy_log="logs/alreadytrackedpastes.log")
 
 banner(["pastebincomTrack", "user track - follows configs/users.txt targets",
         str(len(searchTerms)) + " search terms loaded · email:password detection always on"])
@@ -62,7 +62,6 @@ while True:
                 f = open(pastepath, "wb")
                 f.write(curPaste.content)
                 f.close()
-                tracked.add(paste_id)
                 newcounter += 1
 
                 for category, value, _ in matches:
@@ -79,6 +78,7 @@ while True:
                     label = sanitize_filename(sensitive[0][1])
                     log("OK", "sensitive data saved to data/otherSensitivePastes/pastebin/ (" + paste_id + ")")
                     shutil.copy2(pastepath, "data/otherSensitivePastes/pastebin/" + label + "_" + paste_id)
+                tracked.add(paste_id)
 
                 log("INFO", "sleeping 20s till the next paste")
                 time.sleep(20)

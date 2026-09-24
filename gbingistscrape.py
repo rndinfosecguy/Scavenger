@@ -14,7 +14,7 @@ session = requests.session()
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"}
 searchTerms = tools.loadSearchTerms()
 
-tracked = DatabaseTracker("logs/trackedpastes.db")
+tracked = DatabaseTracker("logs/tracker.db", table="crawled")
 GIST_LINK_RE = re.compile(r'^/([^/]+)/([a-f0-9]{32})$')
 
 backoff = 5
@@ -60,7 +60,6 @@ while True:
                 pastepath = "data/raw_pastes/github/" + gist_id
                 with open(pastepath, "w") as f:
                     f.write(content)
-                tracked.add(gist_id)
                 newcounter += 1
 
                 matches = tools.analyze_content(content.splitlines(), searchTerms)
@@ -78,6 +77,7 @@ while True:
                     label = sanitize_filename(sensitive[0][1])
                     log("OK", "sensitive data saved to data/otherSensitivePastes/github/ (" + gist_id + ")")
                     shutil.copy2(pastepath, "data/otherSensitivePastes/github/" + label + "_" + gist_id)
+                tracked.add(gist_id)
 
                 time.sleep(random.randint(15, 30))
             except Exception as e:
@@ -88,8 +88,8 @@ while True:
         divider()
         log("OK", "pass complete — crawled " + str(newcounter) + " new gist(s), found " + str(hitcounter) + " hit(s)")
         backoff = 5
-        log("INFO", "sleeping 300s before the next pass")
-        time.sleep(300)
+        log("INFO", "sleeping 240s before the next pass")
+        time.sleep(240)
 
     except requests.exceptions.RequestException as e:
         log("ERROR", "discover page failed: " + str(e))
