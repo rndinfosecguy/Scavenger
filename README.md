@@ -77,7 +77,7 @@ Program help:
 ```console
 $ python3 scavenger.py -h
 ╭── Scavenger 3.0 ─────────────────────────────────╮
-│ pastebin credential-leak crawler                 │
+│ multi-source credential-leak crawler             │
 │                                                  │
 │   -0  pastebin archive scrape module             │
 │   -1  pastebin user track module                 │
@@ -85,10 +85,11 @@ $ python3 scavenger.py -h
 │   -3  GitHub gist scraper                        │
 │   -4  edit search terms                          │
 │   -5  edit tracked users                         │
+│   -6  dashboard                                  │
 │                                                  │
 │ python3 scavenger.py -0 -1  (combine flags)      │
 ╰──────────────────────────────────────────────────╯
-usage: scavenger.py [-h] [-0] [-1] [-2] [-3] [-4] [-5]
+usage: scavenger.py [-h] [-0] [-1] [-2] [-3] [-4] [-5] [-6]
 
 control script
 
@@ -100,6 +101,7 @@ options:
   -3, --githubgist    Activate GitHub gist scraper
   -4, --editsearch    Edit search terms file for additional search terms (email:password combinations will always be searched)
   -5, --editusers     Edit user file of the pastebin.com user track module
+  -6, --dashboard     Start the web dashboard
 
 example usage: python3 scavenger.py -0 -1
 ```
@@ -153,7 +155,13 @@ Pastebin.com user tracker
 $ python3 pbincomTrackUser.py
 ```
 
+Start integrated ([dashboard](https://dashboard.got-hacked.wtf:8080/)) showing statistics for the bot (you may want to customize IP and port)
+```console
+$ python3 scavenger.py -6
+```
+
 ---
+
 
 ## To Do
 
