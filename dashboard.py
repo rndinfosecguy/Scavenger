@@ -9,7 +9,7 @@ import subprocess
 PORT = 8080
 HOST = "127.0.0.1"
 
-SOURCES = ["pastebin", "pastesio", "github"]
+SOURCES = ["pastebin", "pastesio", "github", "dpaste"]
 
 DATA_DIRS = {
     "raw": "data/raw_pastes",
@@ -66,9 +66,10 @@ def build_page():
         "pastebin": ("#58a6ff", "#1c2e4a"),
         "pastesio": ("#3fb950", "#1a3a24"),
         "github": ("#bc8cff", "#2a1f40"),
+        "dpaste": ("#e06c75", "#2a1520"),
     }
-    icons = {"pastebin": "📋", "pastesio": "📄", "github": "💻"}
-    display_names = {"pastebin": "Pastebin", "pastesio": "Pastes.io", "github": "GitHub"}
+    icons = {"pastebin": "📋", "pastesio": "📄", "github": "💻", "dpaste": "📝"}
+    display_names = {"pastebin": "Pastebin", "pastesio": "Pastes.io", "github": "GitHub", "dpaste": "Dpaste"}
 
     for name, raw, pw, sec in rows:
         color, bg = colors[name]

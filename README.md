@@ -57,6 +57,9 @@ For pastes.io:
 For GitHub Gist:
 - scrapes latest gists and looks for sensitive information
 
+For dpaste.com:
+- scrapes archive regulary
+
 Additional features:
 - customizable search terms
 
@@ -83,13 +86,14 @@ $ python3 scavenger.py -h
 │   -1  pastebin user track module                 │
 │   -2  pastes.io random-ID scraper                │
 │   -3  GitHub gist scraper                        │
-│   -4  edit search terms                          │
-│   -5  edit tracked users                         │
-│   -6  dashboard                                  │
+│   -4  dpaste.com scraper                         │
+│   -5  edit search terms                          │
+│   -6  edit tracked users                         │
+│   -7  dashboard                                  │
 │                                                  │
 │ python3 scavenger.py -0 -1  (combine flags)      │
 ╰──────────────────────────────────────────────────╯
-usage: scavenger.py [-h] [-0] [-1] [-2] [-3] [-4] [-5] [-6]
+usage: scavenger.py [-h] [-0] [-1] [-2] [-3] [-4] [-5] [-6] [-7]
 
 control script
 
@@ -99,9 +103,10 @@ options:
   -1, --pbincomTrack  Activate pastebin.com user track module
   -2, --pastesio      Activate pastes.io random-ID scraper
   -3, --githubgist    Activate GitHub gist scraper
-  -4, --editsearch    Edit search terms file for additional search terms (email:password combinations will always be searched)
-  -5, --editusers     Edit user file of the pastebin.com user track module
-  -6, --dashboard     Start the web dashboard
+  -4, --dpaste        Activate dpaste.com public archive scraper
+  -5, --editsearch    Edit search terms file for additional search terms (email:password combinations will always be searched)
+  -6, --editusers     Edit user file of the pastebin.com user track module
+  -7, --dashboard     Start the web dashboard
 
 example usage: python3 scavenger.py -0 -1
 ```
