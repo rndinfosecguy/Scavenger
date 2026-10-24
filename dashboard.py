@@ -27,8 +27,8 @@ def count_files(path):
 
 def count_pastesio_attempts():
     try:
-        conn = sqlite3.connect("logs/tracker.db")
-        return conn.execute("SELECT COUNT(*) FROM tried_pastesio").fetchone()[0]
+        with sqlite3.connect("logs/tracker.db") as conn:
+            return conn.execute("SELECT COUNT(*) FROM tried_pastesio").fetchone()[0]
     except Exception:
         return 0
 
@@ -175,9 +175,11 @@ def build_page():
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
+        self.close_connection = True
         if self.path == "/":
             page = build_page()
             self.send_response(200)
+            self.send_header("Connection", "close")
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(page)))
             self.end_headers()
@@ -192,6 +194,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
 
 with socketserver.ThreadingTCPServer((HOST, PORT), Handler) as httpd:
+    httpd.daemon_threads = True
+    httpd.allow_reuse_address = True
     cert = "logs/dashboard.pem"
     if not os.path.exists(cert):
         subprocess.run([
