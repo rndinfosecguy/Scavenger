@@ -5,6 +5,7 @@ import shutil
 import time
 
 import requests
+import urllib3
 from bs4 import BeautifulSoup, SoupStrainer
 
 import classes.utility
@@ -13,6 +14,8 @@ from classes.utility import DatabaseTracker, banner, divider, log, sanitize_file
 tools = classes.utility.ScavUtility()
 session = requests.session()
 session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"})
+session.verify = False
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 searchTerms = tools.loadSearchTerms()
 
 tracked = DatabaseTracker("logs/tracker.db", table="crawled")
