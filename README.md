@@ -4,6 +4,7 @@
 ---
 
 [bot in action](https://twitter.com/leak_scavenger) 
+My project for analyzing collected pastes: [rndinfosexguy/BlackSignal](https://github.com/rndinfosecguy/BlackSignal)
 
 ---
 
