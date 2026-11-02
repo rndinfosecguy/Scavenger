@@ -174,3 +174,6 @@ $ python3 scavenger.py -6
 
 If you miss anything and want me to add features or make changes, just let me know via Twitter or GitHub issue :-)
 
+## Disclaimer
+
+This software is provided for educational and research purposes only. Users are solely responsible for compliance with applicable laws and terms of service of any data source. Do not use this tool to store or distribute stolen data.
