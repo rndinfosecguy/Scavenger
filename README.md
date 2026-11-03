@@ -62,6 +62,9 @@ For GitHub Gist:
 For dpaste.com:
 - scrapes archive regulary
 
+For pastecode.io:
+- scrapes archive regulary
+
 Additional features:
 - customizable search terms
 
