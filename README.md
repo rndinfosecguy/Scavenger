@@ -67,7 +67,7 @@ Additional features:
 
 ## Configuration
 
-0. Execute `setup.sh` to install are needed non standard python libraries
+0. Execute `setup.sh` to install all needed non standard python libraries
 1. Delete the README.md files in every subfolder as they are only placeholders 
 2. The bot searches for email:password combinations and other kinds sensitive data by default. If you want to add more search terms edit the __configs/searchterms.txt__ file or use the -2 switch in the control script
 Default __configs/searchterms.txt__ configuration:
@@ -80,7 +80,7 @@ You know a useful search terms which is missing here? Tell me! :-)
 
 Program help:
 ```console
-$ python3 scavenger.py -h
+$ python3 scavenger.py scavenger.py -h
 ╭── Scavenger 3.0 ─────────────────────────────────╮
 │ multi-source credential-leak crawler             │
 │                                                  │
@@ -89,13 +89,14 @@ $ python3 scavenger.py -h
 │   -2  pastes.io random-ID scraper                │
 │   -3  GitHub gist scraper                        │
 │   -4  dpaste.com scraper                         │
-│   -5  edit search terms                          │
-│   -6  edit tracked users                         │
-│   -7  dashboard                                  │
+│   -5  pastecode.io scraper                       │
+│   -6  edit search terms                          │
+│   -7  edit tracked users                         │
+│   -8  dashboard                                  │
 │                                                  │
 │ python3 scavenger.py -0 -1  (combine flags)      │
 ╰──────────────────────────────────────────────────╯
-usage: scavenger.py [-h] [-0] [-1] [-2] [-3] [-4] [-5] [-6] [-7]
+usage: scavenger.py [-h] [-0] [-1] [-2] [-3] [-4] [-5] [-6] [-7] [-8]
 
 control script
 
@@ -106,9 +107,10 @@ options:
   -2, --pastesio      Activate pastes.io random-ID scraper
   -3, --githubgist    Activate GitHub gist scraper
   -4, --dpaste        Activate dpaste.com public archive scraper
-  -5, --editsearch    Edit search terms file for additional search terms (email:password combinations will always be searched)
-  -6, --editusers     Edit user file of the pastebin.com user track module
-  -7, --dashboard     Start the web dashboard
+  -5, --pastecode     Activate pastecode.io scraper
+  -6, --editsearch    Edit search terms file for additional search terms (email:password combinations will always be searched)
+  -7, --editusers     Edit user file of the pastebin.com user track module
+  -8, --dashboard     Start the web dashboard
 
 example usage: python3 scavenger.py -0 -1
 ```
@@ -168,7 +170,6 @@ $ python3 scavenger.py -6
 ```
 
 ---
-
 
 ## To Do
 
