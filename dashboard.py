@@ -175,6 +175,14 @@ def build_page():
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
+    def handle(self):
+        """Catch SSL handshake errors so a single bad client doesn't crash the server."""
+        try:
+            super().handle()
+        except (ssl.SSLError, ConnectionError, OSError) as e:
+            ts = datetime.datetime.now().strftime("%H:%M:%S")
+            print(ts + " SSL/connection error: " + str(e))
+
     def do_GET(self):
         self.close_connection = True
         if self.path == "/":
@@ -204,7 +212,7 @@ with socketserver.ThreadingTCPServer((HOST, PORT), Handler) as httpd:
             "-out", cert, "-days", "3650", "-nodes",
             "-subj", "/CN=localhost",
         ], capture_output=True)
-    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ctx.load_cert_chain(cert)
     httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
     print("dashboard: https://" + HOST + ":" + str(PORT))
