@@ -65,6 +65,9 @@ For dpaste.com:
 For pastecode.io:
 - scrapes archive regulary
 
+For gitlab.com:
+- scrapes snippets archive regulary
+
 Additional features:
 - customizable search terms
 
