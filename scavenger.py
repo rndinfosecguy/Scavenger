@@ -13,9 +13,10 @@ panel("Scavenger 3.0",
       "  -3  GitHub gist scraper",
       "  -4  dpaste.com scraper",
       "  -5  pastecode.io scraper",
-      "  -6  edit search terms",
-      "  -7  edit tracked users",
-      "  -8  dashboard",
+      "  -6  gitlab snippet scraper",
+      "  -7  edit search terms",
+      "  -8  edit tracked users",
+      "  -9  dashboard",
       "",
       "python3 scavenger.py -0 -1  (combine flags)",
       width=52)
@@ -40,12 +41,15 @@ parser.add_argument("-4", "--dpaste",
 parser.add_argument("-5", "--pastecode",
                     help="Activate pastecode.io scraper",
                     action="store_true")
-parser.add_argument("-6", "--editsearch",
+parser.add_argument("-6", "--gitlab",
+                    help="Activate GitLab public snippet scraper",
+                    action="store_true")
+parser.add_argument("-7", "--editsearch",
                      help="Edit search terms file for additional search terms (email:password combinations will always be searched)",
                      action="store_true")
-parser.add_argument("-7", "--editusers", help="Edit user file of the pastebin.com user track module",
+parser.add_argument("-8", "--editusers", help="Edit user file of the pastebin.com user track module",
                     action="store_true")
-parser.add_argument("-8", "--dashboard", help="Start the web dashboard",
+parser.add_argument("-9", "--dashboard", help="Start the web dashboard",
                     action="store_true")
 args = parser.parse_args()
 
@@ -73,20 +77,24 @@ if args.pastecode:
     log("OK", "starting pastecode.io scraper in detached tmux session `pastecodeScrape`")
     os.system("tmux new -d -s pastecodeScrape 'python3 pastecodeScrape.py'")
 
+if args.gitlab:
+    log("OK", "starting GitLab snippet scraper in detached tmux session `gitlabSnippetScrape`")
+    os.system("tmux new -d -s gitlabSnippetScrape 'python3 gitlabsnippetScrape.py'")
+
 if args.dashboard:
     log("OK", "starting dashboard in detached tmux session `scavengerDashboard`")
     os.system("tmux new -d -s scavengerDashboard 'python3 dashboard.py'")
 
 if args.editsearch:
-    if not (args.pbincomTrack or args.pbincom or args.pastesio or args.githubgist or args.dpaste or args.pastecode or args.dashboard or args.editusers):
+    if not (args.pbincomTrack or args.pbincom or args.pastesio or args.githubgist or args.dpaste or args.pastecode or args.gitlab or args.dashboard or args.editusers):
         os.system("vi configs/searchterms.txt")
         log("WARN", "search terms changed - restart the affected module")
     else:
-        log("ERROR", "-6/--editsearch cannot be used with other arguments")
+        log("ERROR", "-7/--editsearch cannot be used with other arguments")
 
 if args.editusers:
-    if not (args.pbincomTrack or args.pbincom or args.pastesio or args.githubgist or args.dpaste or args.pastecode or args.dashboard or args.editsearch):
+    if not (args.pbincomTrack or args.pbincom or args.pastesio or args.githubgist or args.dpaste or args.pastecode or args.gitlab or args.dashboard or args.editsearch):
         os.system("vi configs/users.txt")
         log("WARN", "tracked users changed - restart the affected module")
     else:
-        log("ERROR", "-7/--editusers cannot be used with other arguments")
+        log("ERROR", "-8/--editusers cannot be used with other arguments")

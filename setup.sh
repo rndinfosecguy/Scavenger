@@ -8,7 +8,7 @@ set -u
 # Every script in this repo hardcodes relative paths — run from the repo root.
 cd "$(dirname "$0")" || exit 1
 
-SOURCES="pastebin pastesio github dpaste pastecode"
+SOURCES="pastebin pastesio github dpaste pastecode gitlab"
 DIRS="data data/raw_pastes data/files_with_passwords data/otherSensitivePastes archive logs"
 for s in $SOURCES; do
     DIRS="$DIRS data/raw_pastes/$s data/files_with_passwords/$s data/otherSensitivePastes/$s"
