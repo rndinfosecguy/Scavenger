@@ -65,6 +65,9 @@ For dpaste.com:
 For pastecode.io:
 - scrapes archive regulary
 
+For gitlab.com:
+- scrapes snippets archive regulary
+
 Additional features:
 - customizable search terms
 
@@ -93,13 +96,14 @@ $ python3 scavenger.py scavenger.py -h
 │   -3  GitHub gist scraper                        │
 │   -4  dpaste.com scraper                         │
 │   -5  pastecode.io scraper                       │
-│   -6  edit search terms                          │
-│   -7  edit tracked users                         │
-│   -8  dashboard                                  │
+│   -6  gitlab snippet scraper                     │
+│   -7  edit search terms                          │
+│   -8  edit tracked users                         │
+│   -9  dashboard                                  │
 │                                                  │
 │ python3 scavenger.py -0 -1  (combine flags)      │
 ╰──────────────────────────────────────────────────╯
-usage: scavenger.py [-h] [-0] [-1] [-2] [-3] [-4] [-5] [-6] [-7] [-8]
+usage: scavenger.py [-h] [-0] [-1] [-2] [-3] [-4] [-5] [-6] [-7] [-8] [-9]
 
 control script
 
@@ -111,9 +115,10 @@ options:
   -3, --githubgist    Activate GitHub gist scraper
   -4, --dpaste        Activate dpaste.com public archive scraper
   -5, --pastecode     Activate pastecode.io scraper
-  -6, --editsearch    Edit search terms file for additional search terms (email:password combinations will always be searched)
-  -7, --editusers     Edit user file of the pastebin.com user track module
-  -8, --dashboard     Start the web dashboard
+  -6, --gitlab        Activate GitLab public snippet scraper
+  -7, --editsearch    Edit search terms file for additional search terms (email:password combinations will always be searched)
+  -8, --editusers     Edit user file of the pastebin.com user track module
+  -9, --dashboard     Start the web dashboard
 
 example usage: python3 scavenger.py -0 -1
 ```
