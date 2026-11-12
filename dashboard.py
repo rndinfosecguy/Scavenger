@@ -60,35 +60,35 @@ def build_page():
     def pct(v):
         return f"{v / total_pastes * 100:.1f}"
 
-    cards = ""
-    sources_html = ""
     colors = {
-        "pastebin": ("#58a6ff", "#1c2e4a"),
-        "pastesio": ("#3fb950", "#1a3a24"),
-        "github": ("#bc8cff", "#2a1f40"),
-        "dpaste": ("#e06c75", "#2a1520"),
-        "pastecode": ("#f0883e", "#3a2415"),
-        "gitlab": ("#fc6d26", "#3a1f0a"),
+        "pastebin": "#58a6ff",
+        "pastesio": "#00ff41",
+        "github":  "#bc8cff",
+        "dpaste":  "#e06c75",
+        "pastecode": "#f0883e",
+        "gitlab":  "#fc6d26",
     }
     icons = {"pastebin": "📋", "pastesio": "📄", "github": "💻", "dpaste": "📝", "pastecode": "📌", "gitlab": "🦊"}
     display_names = {"pastebin": "Pastebin", "pastesio": "Pastes.io", "github": "GitHub", "dpaste": "Dpaste", "pastecode": "PasteCode", "gitlab": "GitLab"}
+    source_order = {"pastebin": 0, "pastesio": 1, "github": 2, "dpaste": 3, "pastecode": 4, "gitlab": 5}
 
-    for name, raw, pw, sec in rows:
-        color, bg = colors[name]
-        label = display_names[name] + (" (" + fm(pio) + " attempts)" if name == "pastesio" and pio else "")
+    labels_row = '<div class="src-row src-header"><span class="src-cell src-cell-icon"></span><span class="src-cell src-cell-name">source</span><span class="src-cell src-cell-num">raw</span><span class="src-cell src-cell-num">pw</span><span class="src-cell src-cell-num">sec</span><span class="src-cell src-cell-bar"></span></div>'
+
+    rows_sorted = sorted(rows, key=lambda r: source_order.get(r[0], 99))
+    sources_rows = ""
+    for name, raw, pw, sec in rows_sorted:
+        color = colors[name]
+        label = display_names[name]
+        suffix = " <span class=\"attempts\">[" + fm(pio) + " tries]</span>" if name == "pastesio" and pio else ""
         bar_pct = pct(pw)
-        sources_html += (
-            "<div class=\"src-card\" style=\"border-left-color: " + color + ";\">"
-            + "<div class=\"src-head\">"
-            + "<span class=\"src-icon\">" + icons[name] + "</span>"
-            + "<span class=\"src-name\">" + label + "</span>"
-            + "</div>"
-            + "<div class=\"src-stats\">"
-            + "<div class=\"stat\"><span class=\"stat-label\">Raw</span><span class=\"stat-value\">" + fm(raw) + "</span></div>"
-            + "<div class=\"stat\"><span class=\"stat-label\">Passwords</span><span class=\"stat-value pw\">" + fm(pw) + "</span></div>"
-            + "<div class=\"stat\"><span class=\"stat-label\">Secrets</span><span class=\"stat-value sec\">" + fm(sec) + "</span></div>"
-            + "</div>"
-            + "<div class=\"bar-wrap\"><div class=\"bar\" style=\"width: " + bar_pct + "%; background: " + color + ";\"></div></div>"
+        sources_rows += (
+            "<div class=\"src-row\" style=\"--src-color: " + color + ";\">"
+            + "<span class=\"src-cell src-cell-icon\">" + icons[name] + "</span>"
+            + "<span class=\"src-cell src-cell-name\">" + label + suffix + "</span>"
+            + "<span class=\"src-cell src-cell-num\">" + fm(raw) + "</span>"
+            + "<span class=\"src-cell src-cell-num pw\">" + fm(pw) + "</span>"
+            + "<span class=\"src-cell src-cell-num sec\">" + fm(sec) + "</span>"
+            + "<span class=\"src-cell src-cell-bar\"><span class=\"src-bar\" style=\"width: " + bar_pct + "%;\"></span></span>"
             + "</div>\n"
         )
 
@@ -98,78 +98,239 @@ def build_page():
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="refresh" content="30">
-<title>Scavenger Dashboard</title>
+<title>scavenger :: dashboard</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0a0a0e;
+    --bg-panel:#0f0f14;
+    --fg:       #c0c4d0;
+    --fg-dim:   #555770;
+    --fg-bright:#e0e4f0;
+    --green:    #00ff41;
+    --blue:     #58a6ff;
+    --purple:   #bc8cff;
+    --red:      #e06c75;
+    --orange:   #f0883e;
+    --gitlab-orange: #fc6d26;
+    --border:   #1a1a28;
+    --glow-green: 0 0 6px rgba(0,255,65,0.15);
+  }
+
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #0a0c10; color: #e1e4e8;
-    display: flex; justify-content: center; padding: 3rem 1.5rem;
+    font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", "Courier New", monospace;
+    background: var(--bg);
+    color: var(--fg);
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1rem;
     min-height: 100vh;
+    line-height: 1.5;
   }
-  .app { width: min(720px, 100%); }
 
-  .header { margin-bottom: 2rem; }
-  .header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
-  .header .sub { color: #6e7387; font-size: 0.88rem; margin-top: 0.2rem; }
+  /* CRT scan-line overlay */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.03) 0px,
+      rgba(0,0,0,0.03) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    z-index: 999;
+  }
 
-  .stat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.75rem; }
+  .app { width: min(820px, 100%); }
+
+  /* ===== HEADER ===== */
+  .header {
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    line-height: 1;
+  }
+  .header .badge {
+    display: inline-block;
+    border: 1px solid var(--border);
+    padding: 0.35rem 0.6rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .header .status {
+    font-size: 0.6rem;
+    color: var(--fg-dim);
+    letter-spacing: 0.05em;
+    margin-left: auto;
+  }
+  .header .status .live {
+    color: var(--green);
+  }
+  .header .status .live::before {
+    content: "● ";
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* ===== OVERVIEW CARDS ===== */
+  .stat-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+  }
   .stat-card {
-    background: linear-gradient(135deg, #171922 0%, #1c1e28 100%);
-    border: 1px solid #282a35; border-radius: 12px; padding: 1.1rem 1.2rem;
-    transition: transform 0.15s, box-shadow 0.15s;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 0.85rem 1rem;
+    text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
-  .stat-card .num { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; }
-  .stat-card .label { font-size: 0.82rem; color: #6e7387; margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
-  .stat-card .num.raw-num { color: #58a6ff; }
-  .stat-card .num.pw-num { color: #3fb950; }
-  .stat-card .num.sec-num { color: #bc8cff; }
-
-  .src-card {
-    background: #151720; border: 1px solid #282a35; border-left: 4px solid;
-    border-radius: 12px; padding: 1.2rem 1.4rem; margin-bottom: 0.75rem;
-    transition: transform 0.15s, box-shadow 0.15s;
+  .stat-card:hover {
+    border-color: var(--green);
+    box-shadow: var(--glow-green);
   }
-  .src-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.35); }
-  .src-head { display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.75rem; }
-  .src-icon { font-size: 1.1rem; }
-  .src-name { font-weight: 600; font-size: 1rem; }
-  .src-stats { display: flex; gap: 1.5rem; flex-wrap: wrap; }
-  .stat { display: flex; flex-direction: column; gap: 0.15rem; }
-  .stat-label { font-size: 0.75rem; color: #6e7387; text-transform: uppercase; letter-spacing: 0.06em; }
-  .stat-value { font-size: 1.1rem; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .stat-value.pw { color: #3fb950; }
-  .stat-value.sec { color: #bc8cff; }
+  .stat-card .num {
+    font-size: 1.6rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+  .stat-card .num.raw-num { color: var(--blue); }
+  .stat-card .num.pw-num  { color: var(--green); }
+  .stat-card .num.sec-num { color: var(--purple); }
+  .stat-card .label {
+    font-size: 0.6rem;
+    color: var(--fg-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 0.2rem;
+  }
 
-  .bar-wrap { margin-top: 0.7rem; height: 4px; background: #282a35; border-radius: 4px; overflow: hidden; }
-  .bar { height: 100%; border-radius: 4px; transition: width 0.5s; }
+  /* ===== SOURCE TABLE ===== */
+  .src-table {
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    overflow: hidden;
+  }
+  .src-row {
+    display: grid;
+    grid-template-columns: 1.6rem 1fr 4.5rem 4.5rem 4.5rem 1fr;
+    align-items: center;
+    gap: 0;
+    padding: 0.55rem 1rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    font-size: 0.78rem;
+  }
+  .src-row:last-child { border-bottom: none; }
+  .src-row:hover {
+    background: rgba(0,255,65,0.03);
+  }
+  .src-header {
+    color: var(--fg-dim);
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+  }
+  .src-header:hover { background: transparent; }
 
-  .footer { margin-top: 1.5rem; text-align: center; font-size: 0.8rem; color: #3d4053; }
-  .footer .dot { color: #282a35; }
+  .src-cell { display: flex; align-items: center; }
+  .src-cell-icon  { font-size: 0.9rem; justify-content: center; }
+  .src-cell-name  { font-weight: 600; color: var(--fg-bright); padding-left: 0.4rem; }
+  .src-cell-num   { justify-content: flex-end; font-variant-numeric: tabular-nums; }
+  .src-cell-num.pw  { color: var(--green); }
+  .src-cell-num.sec { color: var(--purple); }
+  .src-cell-bar   { padding-left: 0.6rem; }
 
-  @media (max-width: 540px) {
-    body { padding: 1.5rem 1rem; }
-    .stat-cards { gap: 0.5rem; }
-    .stat-card { padding: 0.9rem 1rem; }
-    .stat-card .num { font-size: 1.4rem; }
-    .src-stats { gap: 1rem; }
+  .attempts {
+    color: var(--fg-dim);
+    font-weight: 400;
+    font-size: 0.65rem;
+  }
+
+  .src-bar {
+    display: block;
+    height: 3px;
+    background: var(--src-color, var(--green));
+    border-radius: 0;
+    transition: width 0.8s ease;
+    box-shadow: 0 0 4px var(--src-color, var(--green));
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 0.55rem;
+    color: var(--border);
+    letter-spacing: 0.05em;
+  }
+  .footer::before {
+    content: "━".repeat(40);
+    display: block;
+    margin-bottom: 0.5rem;
+    opacity: 0.4;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 680px) {
+    .stat-cards { gap: 0.4rem; }
+    .stat-card .num { font-size: 1.3rem; }
+    .src-row {
+      grid-template-columns: 1.4rem 1fr 3.2rem 3.2rem 3.2rem 1fr;
+      font-size: 0.7rem;
+      padding: 0.45rem 0.7rem;
+    }
+    .src-header { font-size: 0.55rem; padding: 0.4rem 0.7rem; }
+    .src-cell-bar { display: none; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 1rem 0.5rem; }
+    .stat-cards { grid-template-columns: repeat(3, 1fr); gap: 0.3rem; }
+    .stat-card { padding: 0.6rem 0.5rem; }
+    .stat-card .num { font-size: 1.1rem; }
+    .src-row {
+      grid-template-columns: 1.2rem 1fr 2.6rem 2.6rem 2.6rem;
+      font-size: 0.62rem;
+      padding: 0.4rem 0.5rem;
+    }
+    .src-cell-bar { display: none; }
+    .header { flex-wrap: wrap; gap: 0.4rem; }
+    .header .status { margin-left: 0; }
   }
 </style>
 </head>
 <body>
 <div class="app">
   <div class="header">
-    <h1>Scavenger Dashboard</h1>
-    <p class="sub">Auto-refreshes every 30s</p>
+    <span class="badge">scavenger/dashboard</span>
+    <span class="status"><span class="live">online</span> · refresh 30s</span>
   </div>
+
   <div class="stat-cards">
     <div class="stat-card"><div class="num raw-num">""" + fm(totals["raw"]) + """</div><div class="label">Raw Pastes</div></div>
     <div class="stat-card"><div class="num pw-num">""" + fm(totals["passwords"]) + """</div><div class="label">Passwords</div></div>
     <div class="stat-card"><div class="num sec-num">""" + fm(totals["sensitive"]) + """</div><div class="label">Secrets</div></div>
   </div>
-""" + sources_html + """
-  <div class="footer"><span class="dot">·</span> localhost:""" + str(PORT) + """ <span class="dot">·</span></div>
+
+  <div class="src-table">
+""" + labels_row + sources_rows + """
+  </div>
+
+  <div class="footer">localhost:""" + str(PORT) + """</div>
 </div>
 </body>
 </html>"""
