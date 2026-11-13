@@ -5,11 +5,23 @@ import sqlite3
 import socketserver
 import ssl
 import subprocess
+import time
 
 PORT = 8080
 HOST = "127.0.0.1"
 
 SOURCES = ["pastebin", "pastesio", "github", "dpaste", "pastecode", "gitlab"]
+
+# Map each source to the tmux session name(s) it runs under.
+# pastebin has two scrapers (archive + track); the rest have one.
+TMUX_SESSIONS = {
+    "pastebin": ["pastebincomArchive", "pastebincomTrack"],
+    "pastesio":  ["pastesioScrape"],
+    "github":    ["githubgistScrape"],
+    "dpaste":    ["dpasteScrape"],
+    "pastecode": ["pastecodeScrape"],
+    "gitlab":    ["gitlabSnippetScrape"],
+}
 
 DATA_DIRS = {
     "raw": "data/raw_pastes",
@@ -33,6 +45,40 @@ def count_pastesio_attempts():
         return 0
 
 
+_TMUX_CACHE = {"ts": 0, "sessions": set()}
+_TMUX_CACHE_TTL = 10
+
+
+def _get_active_sessions():
+    """Return a set of active tmux session names, cached for _TMUX_CACHE_TTL seconds.
+
+    Calls `tmux list-sessions` once and reuses the result for rapid refreshes.
+    """
+    now = time.time()
+    if now - _TMUX_CACHE["ts"] < _TMUX_CACHE_TTL:
+        return _TMUX_CACHE["sessions"]
+    try:
+        result = subprocess.run(
+            ["tmux", "list-sessions", "-F", "#{session_name}"],
+            capture_output=True, text=True, timeout=5,
+        )
+        sessions = set(result.stdout.strip().splitlines()) if result.returncode == 0 else set()
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        sessions = set()
+    _TMUX_CACHE["ts"] = now
+    _TMUX_CACHE["sessions"] = sessions
+    return sessions
+
+
+def source_is_online(source):
+    """Return True if at least one tmux session for this source is alive."""
+    active = _get_active_sessions()
+    for sess in TMUX_SESSIONS.get(source, []):
+        if sess in active:
+            return True
+    return False
+
+
 def collect_stats():
     rows = []
     totals = {"raw": 0, "passwords": 0, "sensitive": 0}
@@ -52,43 +98,31 @@ def collect_stats():
 
 def build_page():
     rows, totals, pio = collect_stats()
-    total_pastes = totals["raw"] or 1
 
     def fm(v):
         return f"{v:,}"
 
-    def pct(v):
-        return f"{v / total_pastes * 100:.1f}"
-
-    colors = {
-        "pastebin": "#58a6ff",
-        "pastesio": "#00ff41",
-        "github":  "#bc8cff",
-        "dpaste":  "#e06c75",
-        "pastecode": "#f0883e",
-        "gitlab":  "#fc6d26",
-    }
     icons = {"pastebin": "📋", "pastesio": "📄", "github": "💻", "dpaste": "📝", "pastecode": "📌", "gitlab": "🦊"}
     display_names = {"pastebin": "Pastebin", "pastesio": "Pastes.io", "github": "GitHub", "dpaste": "Dpaste", "pastecode": "PasteCode", "gitlab": "GitLab"}
     source_order = {"pastebin": 0, "pastesio": 1, "github": 2, "dpaste": 3, "pastecode": 4, "gitlab": 5}
 
-    labels_row = '<div class="src-row src-header"><span class="src-cell src-cell-icon"></span><span class="src-cell src-cell-name">source</span><span class="src-cell src-cell-num">raw</span><span class="src-cell src-cell-num">pw</span><span class="src-cell src-cell-num">sec</span><span class="src-cell src-cell-bar"></span></div>'
+    labels_row = '<div class="src-row src-header"><span class="src-cell src-cell-icon"></span><span class="src-cell src-cell-name">source</span><span class="src-cell src-cell-num">raw</span><span class="src-cell src-cell-num">pw</span><span class="src-cell src-cell-num">sec</span><span class="src-cell src-cell-tail">scraper status</span></div>'
 
     rows_sorted = sorted(rows, key=lambda r: source_order.get(r[0], 99))
     sources_rows = ""
     for name, raw, pw, sec in rows_sorted:
-        color = colors[name]
         label = display_names[name]
         suffix = " <span class=\"attempts\">[" + fm(pio) + " tries]</span>" if name == "pastesio" and pio else ""
-        bar_pct = pct(pw)
+        online = source_is_online(name)
+        status_dot = "<span class=\"dot-online\">● online</span>" if online else "<span class=\"dot-offline\">● offline</span>"
         sources_rows += (
-            "<div class=\"src-row\" style=\"--src-color: " + color + ";\">"
+            "<div class=\"src-row\">"
             + "<span class=\"src-cell src-cell-icon\">" + icons[name] + "</span>"
             + "<span class=\"src-cell src-cell-name\">" + label + suffix + "</span>"
             + "<span class=\"src-cell src-cell-num\">" + fm(raw) + "</span>"
             + "<span class=\"src-cell src-cell-num pw\">" + fm(pw) + "</span>"
             + "<span class=\"src-cell src-cell-num sec\">" + fm(sec) + "</span>"
-            + "<span class=\"src-cell src-cell-bar\"><span class=\"src-bar\" style=\"width: " + bar_pct + "%;\"></span></span>"
+            + "<span class=\"src-cell src-cell-tail\">" + status_dot + "</span>"
             + "</div>\n"
         )
 
@@ -173,14 +207,6 @@ def build_page():
     letter-spacing: 0.05em;
     margin-left: auto;
   }
-  .header .status .live {
-    color: var(--green);
-  }
-  .header .status .live::before {
-    content: "● ";
-    animation: pulse 2s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
   /* ===== OVERVIEW CARDS ===== */
   .stat-cards {
@@ -225,9 +251,9 @@ def build_page():
   }
   .src-row {
     display: grid;
-    grid-template-columns: 1.6rem 1fr 4.5rem 4.5rem 4.5rem 1fr;
+    grid-template-columns: 1.6rem 1fr 4.5rem 4.5rem 4.5rem 2fr;
     align-items: center;
-    gap: 0;
+    column-gap: 0.5rem;
     padding: 0.55rem 1rem;
     border-bottom: 1px solid var(--border);
     transition: background 0.15s;
@@ -253,7 +279,7 @@ def build_page():
   .src-cell-num   { justify-content: flex-end; font-variant-numeric: tabular-nums; }
   .src-cell-num.pw  { color: var(--green); }
   .src-cell-num.sec { color: var(--purple); }
-  .src-cell-bar   { padding-left: 0.6rem; }
+  .src-cell-tail  { justify-content: center; }
 
   .attempts {
     color: var(--fg-dim);
@@ -261,14 +287,14 @@ def build_page():
     font-size: 0.65rem;
   }
 
-  .src-bar {
-    display: block;
-    height: 3px;
-    background: var(--src-color, var(--green));
-    border-radius: 0;
-    transition: width 0.8s ease;
-    box-shadow: 0 0 4px var(--src-color, var(--green));
+  .dot-online {
+    color: var(--green);
+    animation: pulse 2s ease-in-out infinite;
   }
+  .dot-offline {
+    color: var(--red);
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
   /* ===== FOOTER ===== */
   .footer {
@@ -290,12 +316,12 @@ def build_page():
     .stat-cards { gap: 0.4rem; }
     .stat-card .num { font-size: 1.3rem; }
     .src-row {
-      grid-template-columns: 1.4rem 1fr 3.2rem 3.2rem 3.2rem 1fr;
+      grid-template-columns: 1.4rem 1fr 3.2rem 3.2rem 3.2rem 2fr;
+      column-gap: 0.3rem;
       font-size: 0.7rem;
       padding: 0.45rem 0.7rem;
     }
     .src-header { font-size: 0.55rem; padding: 0.4rem 0.7rem; }
-    .src-cell-bar { display: none; }
   }
   @media (max-width: 480px) {
     body { padding: 1rem 0.5rem; }
@@ -303,11 +329,11 @@ def build_page():
     .stat-card { padding: 0.6rem 0.5rem; }
     .stat-card .num { font-size: 1.1rem; }
     .src-row {
-      grid-template-columns: 1.2rem 1fr 2.6rem 2.6rem 2.6rem;
+      grid-template-columns: 1.2rem 1fr 2.6rem 2.6rem 2.6rem 1fr;
+      column-gap: 0.25rem;
       font-size: 0.62rem;
       padding: 0.4rem 0.5rem;
     }
-    .src-cell-bar { display: none; }
     .header { flex-wrap: wrap; gap: 0.4rem; }
     .header .status { margin-left: 0; }
   }
@@ -317,7 +343,7 @@ def build_page():
 <div class="app">
   <div class="header">
     <span class="badge">scavenger/dashboard</span>
-    <span class="status"><span class="live">online</span> · refresh 30s</span>
+    <span class="status">refresh 30s</span>
   </div>
 
   <div class="stat-cards">
