@@ -1,100 +1,142 @@
 import argparse
-import os
+import subprocess
 import sys
 
-from classes.utility import log, panel
+# Each entry: (flag_letter, long_name, script, tmux_session, help_text)
+SCRAPERS = [
+    ("a", "pastebin-archive", "scraper_pastebin_archive.py", "s-pastebin-archive",
+     "Pastebin archive scrape module"),
+    ("t", "pastebin-track",   "scraper_pastebin_track.py",   "s-pastebin-track",
+     "Pastebin user track module"),
+    ("p", "pastesio",         "scraper_pastesio.py",         "s-pastesio",
+     "Pastes.io random-ID scraper"),
+    ("g", "github",           "scraper_github.py",           "s-github",
+     "GitHub gist scraper"),
+    ("d", "dpaste",           "scraper_dpaste.py",           "s-dpaste",
+     "Dpaste.com scraper"),
+    ("c", "pastecode",        "scraper_pastecode.py",        "s-pastecode",
+     "Pastecode.io scraper"),
+    ("l", "gitlab",           "scraper_gitlab.py",           "s-gitlab",
+     "GitLab snippet scraper"),
+]
 
-panel("Scavenger 3.0",
-      "multi-source credential-leak crawler",
-      "",
-      "  -0  pastebin archive scrape module",
-      "  -1  pastebin user track module",
-      "  -2  pastes.io random-ID scraper",
-      "  -3  GitHub gist scraper",
-      "  -4  dpaste.com scraper",
-      "  -5  pastecode.io scraper",
-      "  -6  gitlab snippet scraper",
-      "  -7  edit search terms",
-      "  -8  edit tracked users",
-      "  -9  dashboard",
-      "",
-      "python3 scavenger.py -0 -1  (combine flags)",
-      width=52)
+UTILITIES = [
+    ("D", "dashboard",  "dashboard.py", "s-dashboard",
+     "Web dashboard (HTTPS 127.0.0.1:8080, auto-refresh 30s)"),
+]
 
-parser = argparse.ArgumentParser(description="control script",
-                                 epilog="example usage: python3 " + sys.argv[0] + " -0 -1")
-parser.add_argument("-0", "--pbincom",
-                    help="Activate pastebin.com archive scraping module",
-                    action="store_true")
-parser.add_argument("-1", "--pbincomTrack",
-                    help="Activate pastebin.com user track module",
-                    action="store_true")
-parser.add_argument("-2", "--pastesio",
-                    help="Activate pastes.io random-ID scraper",
-                    action="store_true")
-parser.add_argument("-3", "--githubgist",
-                    help="Activate GitHub gist scraper",
-                    action="store_true")
-parser.add_argument("-4", "--dpaste",
-                    help="Activate dpaste.com public archive scraper",
-                    action="store_true")
-parser.add_argument("-5", "--pastecode",
-                    help="Activate pastecode.io scraper",
-                    action="store_true")
-parser.add_argument("-6", "--gitlab",
-                    help="Activate GitLab public snippet scraper",
-                    action="store_true")
-parser.add_argument("-7", "--editsearch",
-                     help="Edit search terms file for additional search terms (email:password combinations will always be searched)",
-                     action="store_true")
-parser.add_argument("-8", "--editusers", help="Edit user file of the pastebin.com user track module",
-                    action="store_true")
-parser.add_argument("-9", "--dashboard", help="Start the web dashboard",
-                    action="store_true")
-args = parser.parse_args()
+EDITORS = [
+    ("e", "edit-search", "configs/searchterms.txt",
+     "Edit search terms file"),
+    ("u", "edit-users",  "configs/users.txt",
+     "Edit tracked users file"),
+]
 
-if args.pbincom:
-    log("OK", "starting archive crawler in detached tmux session `pastebincomArchive`")
-    os.system("tmux new -d -s pastebincomArchive 'python3 pbincomArchiveScrape.py'")
 
-if args.pbincomTrack:
-    log("OK", "starting user-track crawler in detached tmux session `pastebincomTrack`")
-    os.system("tmux new -d -s pastebincomTrack 'python3 pbincomTrackUser.py'")
+def _help_text(flag, items):
+    for item in items:
+        if item[0] == flag:
+            return item[-1]
+    return ""
 
-if args.pastesio:
-    log("OK", "starting pastes.io scraper in detached tmux session `pastesioScrape`")
-    os.system("tmux new -d -s pastesioScrape 'python3 pbincomIOscrape.py'")
 
-if args.githubgist:
-    log("OK", "starting GitHub gist scraper in detached tmux session `githubgistScrape`")
-    os.system("tmux new -d -s githubgistScrape 'python3 gbingistscrape.py'")
+def _build_panel_lines():
+    lines = ["", "  SCRAPERS"]
+    for flag, name, *_ in SCRAPERS:
+        lines.append("  -" + flag + ", --" + name + "  " + _help_text(flag, SCRAPERS))
+    lines.append("")
+    lines.append("  UTILITIES")
+    for flag, name, *_ in UTILITIES:
+        lines.append("  -" + flag + ", --" + name + "  " + _help_text(flag, UTILITIES))
+    lines.append("")
+    lines.append("  EDITORS  (cannot combine with other flags)")
+    for flag, name, *_ in EDITORS:
+        lines.append("  -" + flag + ", --" + name + "  " + _help_text(flag, EDITORS))
+    lines.append("")
+    lines.append("  python3 scavenger.py -a -t  (combine flags)")
+    return lines
 
-if args.dpaste:
-    log("OK", "starting dpaste.com scraper in detached tmux session `dpasteScrape`")
-    os.system("tmux new -d -s dpasteScrape 'python3 dpastesiteScrape.py'")
 
-if args.pastecode:
-    log("OK", "starting pastecode.io scraper in detached tmux session `pastecodeScrape`")
-    os.system("tmux new -d -s pastecodeScrape 'python3 pastecodeScrape.py'")
+def _show_panel():
+    from classes.utility import panel
+    panel("scavenger", *_build_panel_lines(), width=80)
 
-if args.gitlab:
-    log("OK", "starting GitLab snippet scraper in detached tmux session `gitlabSnippetScrape`")
-    os.system("tmux new -d -s gitlabSnippetScrape 'python3 gitlabsnippetScrape.py'")
 
-if args.dashboard:
-    log("OK", "starting dashboard in detached tmux session `scavengerDashboard`")
-    os.system("tmux new -d -s scavengerDashboard 'python3 dashboard.py'")
+def _build_parser():
+    parser = argparse.ArgumentParser(
+        description="multi-source credential-leak crawler control script",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    for flag, name, *_ in SCRAPERS:
+        parser.add_argument("-" + flag, "--" + name,
+                            help=_help_text(flag, SCRAPERS), action="store_true")
+    for flag, name, *_ in UTILITIES:
+        parser.add_argument("-" + flag, "--" + name,
+                            help=_help_text(flag, UTILITIES), action="store_true")
+    for flag, name, *_ in EDITORS:
+        parser.add_argument("-" + flag, "--" + name,
+                            help=_help_text(flag, EDITORS) + " (cannot combine)",
+                            action="store_true")
+    return parser
 
-if args.editsearch:
-    if not (args.pbincomTrack or args.pbincom or args.pastesio or args.githubgist or args.dpaste or args.pastecode or args.gitlab or args.dashboard or args.editusers):
-        os.system("vi configs/searchterms.txt")
-        log("WARN", "search terms changed - restart the affected module")
-    else:
-        log("ERROR", "-7/--editsearch cannot be used with other arguments")
 
-if args.editusers:
-    if not (args.pbincomTrack or args.pbincom or args.pastesio or args.githubgist or args.dpaste or args.pastecode or args.gitlab or args.dashboard or args.editsearch):
-        os.system("vi configs/users.txt")
-        log("WARN", "tracked users changed - restart the affected module")
-    else:
-        log("ERROR", "-8/--editusers cannot be used with other arguments")
+def _start_tmux(session_name, script_file):
+    from classes.utility import log
+    log("OK", "starting " + script_file + " in detached tmux session `" + session_name + "`")
+    subprocess.run(["tmux", "new", "-d", "-s", session_name,
+                    "python3 " + script_file])
+
+
+def _edit_file(filepath, label):
+    from classes.utility import log
+    subprocess.run(["vi", filepath])
+    log("WARN", label + " changed - restart the affected module")
+
+
+def _collect_flags(args, items):
+    return {getattr(args, name.replace("-", "_")) for _, name, *_ in items}
+
+
+def main():
+    _show_panel()
+    parser = _build_parser()
+    args = parser.parse_args()
+
+    scraper_flags = _collect_flags(args, SCRAPERS)
+    utility_flags = _collect_flags(args, UTILITIES)
+    editor_flags = _collect_flags(args, EDITORS)
+
+    any_scraper = any(scraper_flags)
+    any_utility = any(utility_flags)
+    any_editor = any(editor_flags)
+
+    if not (any_scraper or any_utility or any_editor):
+        parser.print_help()
+        sys.exit(0)
+
+    # Editors cannot be combined with anything
+    if any_editor and (any_scraper or any_utility):
+        from classes.utility import log
+        for flag, name, *_ in EDITORS:
+            if getattr(args, name.replace("-", "_")):
+                log("ERROR", "-" + flag + "/--" + name + " cannot be used with other arguments")
+        sys.exit(1)
+
+    # Start scrapers
+    for flag, name, script, session, *_ in SCRAPERS:
+        if getattr(args, name.replace("-", "_")):
+            _start_tmux(session, script)
+
+    # Start utilities
+    for flag, name, script, session, *_ in UTILITIES:
+        if getattr(args, name.replace("-", "_")):
+            _start_tmux(session, script)
+
+    # Run editors
+    for flag, name, filepath, *_ in EDITORS:
+        if getattr(args, name.replace("-", "_")):
+            _edit_file(filepath, name)
+
+
+if __name__ == "__main__":
+    main()

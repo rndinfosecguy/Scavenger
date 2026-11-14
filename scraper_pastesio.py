@@ -1,3 +1,5 @@
+#!/usr/bin/python
+"""Pastes.io random-ID guesser — hits the pastes.io JSON API with random 8-char IDs."""
 import json
 import os
 import random
@@ -6,10 +8,12 @@ import string
 import time
 
 import requests
-import classes.utility
-from classes.utility import DatabaseTracker, banner, divider, log, sanitize_filename, short
+from classes.utility import (
+    ScavUtility, DatabaseTracker, banner, divider, log, sanitize_filename, short, setup_signals,
+)
 
-tools = classes.utility.ScavUtility()
+running = setup_signals()
+tools = ScavUtility()
 session = requests.session()
 searchTerms = tools.loadSearchTerms()
 
@@ -70,7 +74,6 @@ def handle(response):
             log("OK", "sensitive data saved to data/otherSensitivePastes/pastesio/ (" + paste_id + ")")
             shutil.copy2(pastepath, "data/otherSensitivePastes/pastesio/" + label + "_" + paste_id)
         tried.add(paste_id)
-
         return True
 
     if response.status_code == 404:
@@ -91,11 +94,11 @@ def handle(response):
     return True
 
 
-banner(["pastesioScrape", "random-ID guesser — GET https://pastes.io/api/pastes/{id}",
+banner(["s-pastesio", "random-ID guesser — GET https://pastes.io/api/pastes/{id}",
         str(len(searchTerms)) + " search terms loaded · email:password detection always on",
         "tier: " + TIER + " · key: " + ("set" if API_KEY else "none")])
 
-while True:
+while running[0]:
     tools.archivepastes("data/raw_pastes/pastesio")
     pid = random_id()
     if tried.has(pid):

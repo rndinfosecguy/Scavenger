@@ -1,187 +1,98 @@
 # Scavenger - OSINT Bot - 3.0
 ![image](scavenger_logo.jpg)
 
+Multi-source OSINT credential-leak crawler for paste sites. Seven scrapers and a web dashboard.
+
+[bot in action](https://twitter.com/leak_scavenger)
+
+> **FOR RESEARCH ONLY.** This tool is intended for researchers and defenders to detect exposed secrets on public paste sites before attackers exploit them. Do not host or distribute breach data.
+
 ---
 
-[bot in action](https://twitter.com/leak_scavenger) 
+## Scrapers
 
-My project for analyzing collected pastes: [rndinfosecguy/BlackSignal](https://github.com/rndinfosecguy/BlackSignal)
+| Source | Method | Flag |
+|--------|--------|------|
+| Pastebin archive | polls `https://pastebin.com/archive` for new pastes | `-a` |
+| Pastebin user track | follows users from `configs/users.txt` | `-t` |
+| Pastes.io | random 8-char ID guesses against the JSON API | `-p` |
+| GitHub Gists | polls `https://gist.github.com/discover` for new gists | `-g` |
+| Dpaste.com | polls `https://dpaste.com/public/` | `-d` |
+| Pastecode.io | polls `https://pastecode.io/archive` | `-c` |
+| GitLab snippets | polls `https://gitlab.com/explore/snippets` | `-l` |
 
----
+Additional: `-D` for the web dashboard, `-e`/`-u` to edit search terms/users.
 
-## Intro
-Just the code of my OSINT bot searching for sensitive data leaks on paste sites.
-email:password combinations are always collected.
+## Setup
 
-It detects sensitive information based on the file `searchterms.txt` and some regexes in `classes/utility.py`.
-
-Search terms:
-```
-mysqli_connect(
-BEGIN RSA PRIVATE KEY
------BEGIN
-The name of the database for WordPress
-Return-Path:
-insert into
-INSERT INTO
-.onion
-github_pat_
-AIza
-sk_live_
-rk_live_
-client_secret
-jdbc:
-mongodb://
-mongodb+srv://
-mysql://
-postgresql://
-redis://
-authorization: basic
+```console
+./setup.sh
 ```
 
-Search terms can be customized. You can learn more about it in the configuration section.
+Or manually:
 
-## Articles About Scavenger
-- https://jakecreps.com/2019/05/08/osint-collection-tools-for-pastebin/
-- https://jakecreps.com/2019/01/08/scavenger/
-- https://youtu.be/VCwiZ2dh17Q?t=51 (the bot is mentioned here)
+```console
+pip install -r requirements.txt
+```
 
-## Main Features
-
-For pastebin.com the bot has two modes:
-- looking for sensitive data in the archive via scraping
-- looking for sensitive data by tracking users who publish leaks
-
-For pastes.io:
-- tries to guess pastes and looks for sensitive information
-- do not forget to add your api key under `configs/pastesio.json` and set if you have a `free` or `pro` tier
-
-For GitHub Gist:
-- scrapes latest gists and looks for sensitive information
-
-For dpaste.com:
-- scrapes archive regulary
-
-For pastecode.io:
-- scrapes archive regulary
-
-For gitlab.com:
-- scrapes snippets archive regulary
-
-Additional features:
-- customizable search terms
-
-## Configuration
-
-0. Execute `setup.sh`
-1. Delete the README.md files in every subfolder as they are only placeholders 
-2. The bot searches for email:password combinations and other kinds sensitive data by default. If you want to add more search terms edit the __configs/searchterms.txt__ file or use the -2 switch in the control script
-Default __configs/searchterms.txt__ configuration:
-
-If you want to add other search terms just add them to file line by line.
-You know a useful search terms which is missing here? Tell me! :-)
-3. For the user tracking module of pastebin.com you need to add the target users line by line to the __configs/users.txt__ file.
+Required: Python 3, `tmux`, `vi`, `openssl`. See `setup.sh` for details.
 
 ## Usage
 
-Program help:
-```console
-$ python3 scavenger.py scavenger.py -h
-╭── Scavenger 3.0 ─────────────────────────────────╮
-│ multi-source credential-leak crawler             │
-│                                                  │
-│   -0  pastebin archive scrape module             │
-│   -1  pastebin user track module                 │
-│   -2  pastes.io random-ID scraper                │
-│   -3  GitHub gist scraper                        │
-│   -4  dpaste.com scraper                         │
-│   -5  pastecode.io scraper                       │
-│   -6  gitlab snippet scraper                     │
-│   -7  edit search terms                          │
-│   -8  edit tracked users                         │
-│   -9  dashboard                                  │
-│                                                  │
-│ python3 scavenger.py -0 -1  (combine flags)      │
-╰──────────────────────────────────────────────────╯
-usage: scavenger.py [-h] [-0] [-1] [-2] [-3] [-4] [-5] [-6] [-7] [-8] [-9]
-
-control script
-
-options:
-  -h, --help          show this help message and exit
-  -0, --pbincom       Activate pastebin.com archive scraping module
-  -1, --pbincomTrack  Activate pastebin.com user track module
-  -2, --pastesio      Activate pastes.io random-ID scraper
-  -3, --githubgist    Activate GitHub gist scraper
-  -4, --dpaste        Activate dpaste.com public archive scraper
-  -5, --pastecode     Activate pastecode.io scraper
-  -6, --gitlab        Activate GitLab public snippet scraper
-  -7, --editsearch    Edit search terms file for additional search terms (email:password combinations will always be searched)
-  -8, --editusers     Edit user file of the pastebin.com user track module
-  -9, --dashboard     Start the web dashboard
-
-example usage: python3 scavenger.py -0 -1
-```
-
-Crawled pastes are stored at different locations depending on their status.
-- Paste crawled but nothing was detected -> __data/raw_pastes__
-- Paste crawled and an email:password combination was detected -> __data/raw_pastes__ and __data/files_with_passwords__
-- Paste crawled and other sensitive data was detected -> __data/raw_pastes__ and __data/otherSensitivePastes__
-
-Pastes get stored in data/raw_pastes until they reach a limit of 48000 files.
-Once there are more then 48000 pastes they get ziped and moved to the archive folder.
-
----
-
-Start the pastebin.com archive scraping module
-```console
-$ python3 scavenger.py -0
-```
-Start pastebin.com user tracking module
-```console
-$ python3 scavenger.py -1
-```
-When starting one of these modules, a tmux session with the running module is created in the background.
-
-List tmux sessions
-```console
-$ tmux ls
-pastebincomArchive: 1 windows (created Sun Apr 14 06:33:32 2021) [204x58]
-pastebincomTrack: 1 windows (created Sun Apr 14 06:33:32 2021) [204x58]
-```
-Interact with a tmux session example
+Start scrapers via the control script:
 
 ```console
-$ tmux a -t pastebincomArchive
-$ tmux a -t pastebincomTrack
+python3 scavenger.py -a -t
 ```
 
-To detach from a session hit STRG+b d.
+Each flag launches a scraper in a detached tmux session. You can combine multiple flags.
 
----
-
-If you want to start a module without using the control software you can do this by calling them directly.
-
-Pastebin.com archive scraper
+List sessions:
 ```console
-$ python3 pbincomArchiveScrape.py
+tmux ls
 ```
 
-Pastebin.com user tracker
+Attach to a running scraper:
+
 ```console
-$ python3 pbincomTrackUser.py
+tmux a -t s-pastebin-archive
 ```
 
-Start integrated ([dashboard](https://dashboard.got-hacked.wtf:8080/)) showing statistics for the bot (you may want to customize IP and port)
+Detach with `Ctrl+B d`.
+
+Scripts can also be run directly:
+
 ```console
-$ python3 scavenger.py -6
+python3 scraper_pastebin_archive.py
 ```
 
----
+## Dashboard
 
-## To Do
+```console
+python3 scavenger.py -D
+```
 
-If you miss anything and want me to add features or make changes, just let me know via Twitter or GitHub issue :-)
+HTTPS at `https://127.0.0.1:8080`, auto-refreshes every 30s.
+
+## Config
+
+- `configs/searchterms.txt` — one substring per line. Email:password detection is always on.
+- `configs/users.txt` — target usernames for pastebin user track, one per line.
+- `configs/pastesio.json` — pastes.io API key (optional) and tier (`"free"` or `"pro"`).
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `scavenger.py` | Control script — launches modules via tmux |
+| `classes/utility.py` | Shared helpers: detection, database, archive, scraper loop |
+| `scraper_*.py` | One per source |
+| `dashboard.py` | Web dashboard |
+| `setup.sh` | Idempotent setup — creates dirs, installs deps |
+
+## License
+
+[MIT](LICENSE) © rndinfosecguy
 
 ## Disclaimer
 

@@ -2,8 +2,10 @@
 
 import datetime
 import os
+import random
 import re
 import shutil
+import signal
 import sqlite3
 import time
 import zipfile
@@ -223,3 +225,192 @@ class DatabaseTracker:
     def add(self, paste_id):
         self.conn.execute("INSERT OR IGNORE INTO " + self.table + " VALUES (?)", (paste_id,))
         self.conn.commit()
+
+
+# ---------------------------------------------------------------------------
+# Shared helpers for scrapers
+# ---------------------------------------------------------------------------
+
+DEFAULT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+
+
+def save_paste(source_dir, paste_id, pastepath, content, search_terms):
+    """Analyze content and save to appropriate dir. Returns hit count."""
+    safe_id = paste_id.replace("/", "--")
+    tools = ScavUtility()
+    matches = tools.analyze_content(content.splitlines(), search_terms)
+
+    for category, value, _ in matches:
+        log("OK", category + " detected - " + short(value))
+
+    passwords = [m for m in matches if m[2] == "passwords"]
+    sensitive = [m for m in matches if m[2] == "sensitive"]
+    hitcounter = 0
+    if passwords:
+        hitcounter = 1
+        shutil.copy2(pastepath, "data/files_with_passwords/" + source_dir + "/.")
+        log("OK", "credentials saved to data/files_with_passwords/" + source_dir + "/ (" + paste_id + ")")
+    elif sensitive:
+        hitcounter = 1
+        label = sanitize_filename(sensitive[0][1])
+        shutil.copy2(pastepath, "data/otherSensitivePastes/" + source_dir + "/" + label + "_" + safe_id)
+        log("OK", "sensitive data saved to data/otherSensitivePastes/" + source_dir + "/ (" + paste_id + ")")
+    return hitcounter
+
+
+def setup_signals():
+    """Set up SIGINT/SIGTERM handlers so the scraper exits gracefully. Returns a running flag list."""
+    flag = [True]
+    def handler(sig, frame):
+        flag[0] = False
+        log("WARN", "shutting down...")
+    signal.signal(signal.SIGINT, handler)
+    signal.signal(signal.SIGTERM, handler)
+    return flag
+
+
+def run_scraper(
+    source_name,
+    session_name,
+    archive_url,
+    link_re,
+    fetch_raw,
+    *,
+    source_dir=None,
+    dedup_table="crawled",
+    item_sleep=(5, 10),
+    pass_sleep=300,
+    backoff_max=900,
+    per_pass_session=False,
+    verify=True,
+):
+    """Run an infinite-loop scraper with the standard pattern.
+
+    Parameters
+    ----------
+    source_name : str          — short source identifier ("pastebin", "github", …)
+    session_name : str         — tmux session name for the banner
+    archive_url : str          — URL to poll for new links
+    link_re : compiled regex   — extracts paste ID from <a href> (group 1)
+    fetch_raw : callable(str)  — takes paste_id, returns content string or None
+    source_dir : str | None    — override subdirectory under data/raw_pastes/…
+    dedup_table : str          — name of the SQLite table to use
+    item_sleep : (int, int)    — (min, max) seconds between items
+    pass_sleep : int           — seconds between passes
+    backoff_max : int          — max exponential backoff seconds
+    per_pass_session : bool    — fresh requests.session() each pass?
+    verify : bool              — verify TLS certificates? (set False for broken certs like dpaste)
+    """
+    running = setup_signals()
+    if not verify:
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    tools = ScavUtility()
+    search_terms = tools.loadSearchTerms()
+    tracked = DatabaseTracker("logs/tracker.db", table=dedup_table)
+    sdir = source_dir or source_name
+    backoff = 5
+
+    import requests
+    ua = {"User-Agent": DEFAULT_UA}
+
+    banner([session_name, "polls " + archive_url,
+            str(len(search_terms)) + " search terms loaded · email:password detection always on"])
+
+    def make_session():
+        s = requests.session()
+        s.headers.update(ua)
+        s.verify = verify
+        return s
+
+    session = make_session()
+
+    while running[0]:
+        if per_pass_session:
+            session = make_session()
+
+        divider(session_name + " pass")
+        log("INFO", "archiving raw_pastes if the fetch threshold is reached")
+        tools.archivepastes("data/raw_pastes/" + sdir)
+
+        try:
+            resp = session.get(archive_url, timeout=15)
+            if resp.status_code != 200:
+                log("WARN", archive_url + " returned " + str(resp.status_code) + " — retrying later")
+                if per_pass_session:
+                    del session
+                time.sleep(backoff)
+                backoff = min(backoff * 2, backoff_max)
+                continue
+
+            from bs4 import BeautifulSoup, SoupStrainer
+            soup = BeautifulSoup(resp.text, 'html.parser', parse_only=SoupStrainer('a'))
+            time.sleep(random.randint(3, 6))
+
+            newcounter = 0
+            hitcounter = 0
+            seen = set()
+
+            for link in soup:
+                if not running[0]:
+                    break
+                href = link.get('href')
+                if not href:
+                    continue
+                m = link_re.match(href)
+                if not m:
+                    continue
+                pid = m.group(1)
+                safe_pid = pid.replace("/", "--")
+                if pid in seen:
+                    continue
+                seen.add(pid)
+
+                if tracked.has(pid) or os.path.exists("data/raw_pastes/" + sdir + "/" + safe_pid):
+                    continue
+
+                log("INFO", "crawling " + source_name + " " + pid)
+                try:
+                    content = fetch_raw(pid, session)
+                    if content is None:
+                        log("WARN", source_name + " " + pid + " returned no content — skipping")
+                        tracked.add(pid)
+                        continue
+
+                    pastepath = "data/raw_pastes/" + sdir + "/" + safe_pid
+                    with open(pastepath, "w") as f:
+                        f.write(content)
+                    tracked.add(pid)
+                    newcounter += 1
+
+                    hitcounter += save_paste(sdir, pid, pastepath, content, search_terms)
+
+                    time.sleep(random.randint(*item_sleep))
+                except Exception as e:
+                    log("ERROR", source_name + " " + pid + " failed: " + str(e))
+                    time.sleep(10)
+                    continue
+
+            if per_pass_session and running[0]:
+                del session
+
+            divider()
+            log("OK", "pass complete — crawled " + str(newcounter) + " new, found " + str(hitcounter) + " hit(s)")
+            backoff = 5
+
+            if running[0]:
+                log("INFO", "sleeping " + str(pass_sleep) + "s before the next pass")
+                remaining = pass_sleep
+                while remaining > 0 and running[0]:
+                    time.sleep(min(5, remaining))
+                    remaining -= 5
+
+        except requests.exceptions.RequestException as e:
+            log("ERROR", "request failed: " + str(e))
+            log("WARN", "backing off " + str(backoff) + "s")
+            if per_pass_session:
+                del session
+            time.sleep(backoff)
+            backoff = min(backoff * 2, backoff_max)
+            continue

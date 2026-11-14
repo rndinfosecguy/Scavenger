@@ -15,12 +15,12 @@ SOURCES = ["pastebin", "pastesio", "github", "dpaste", "pastecode", "gitlab"]
 # Map each source to the tmux session name(s) it runs under.
 # pastebin has two scrapers (archive + track); the rest have one.
 TMUX_SESSIONS = {
-    "pastebin": ["pastebincomArchive", "pastebincomTrack"],
-    "pastesio":  ["pastesioScrape"],
-    "github":    ["githubgistScrape"],
-    "dpaste":    ["dpasteScrape"],
-    "pastecode": ["pastecodeScrape"],
-    "gitlab":    ["gitlabSnippetScrape"],
+    "pastebin": ["s-pastebin-archive", "s-pastebin-track"],
+    "pastesio":  ["s-pastesio"],
+    "github":    ["s-github"],
+    "dpaste":    ["s-dpaste"],
+    "pastecode": ["s-pastecode"],
+    "gitlab":    ["s-gitlab"],
 }
 
 DATA_DIRS = {
