@@ -264,6 +264,7 @@ def setup_signals():
     def handler(sig, frame):
         flag[0] = False
         log("WARN", "shutting down...")
+        raise KeyboardInterrupt()
     signal.signal(signal.SIGINT, handler)
     signal.signal(signal.SIGTERM, handler)
     return flag
