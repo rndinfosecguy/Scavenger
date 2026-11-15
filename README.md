@@ -1,11 +1,15 @@
 # Scavenger - OSINT Bot - 3.0
 ![image](scavenger_logo.png)
 
-Multi-source OSINT credential-leak crawler for paste sites. Seven scrapers and a web dashboard.
+Multi-source OSINT credential-leak crawler for paste sites.
 
 [bot in action](https://twitter.com/leak_scavenger)
 
 > **FOR RESEARCH ONLY.** This tool is intended for researchers and defenders to detect exposed secrets on public paste sites before attackers exploit them. Do not host or distribute breach data.
+
+---
+
+Want to analyze collected pastes or a lot of other plaintext files? Use my project [BlackSignal](https://github.com/rndinfosecguy/BlackSignal)
 
 ---
 
@@ -78,18 +82,29 @@ HTTPS at `https://127.0.0.1:8080`, auto-refreshes every 30s.
 ## Config
 
 - `configs/searchterms.txt` — one substring per line. Email:password detection is always on.
-- `configs/users.txt` — target usernames for pastebin user track, one per line.
+- `configs/users.txt` — target usernames for pastebin (one per line).
 - `configs/pastesio.json` — pastes.io API key (optional) and tier (`"free"` or `"pro"`).
+
+## Collected Pastes
+
+```
+data/
+├── raw_pastes/               # All downloaded pastes
+├── files_with_passwords/     # Pastes where passwords have been found
+└── otherSensitivePastes      # Pastes with other sensitive data definded by searchterms.txt
+```
+
+> As soon as the number of raw pastes for a source exceed 48000 files, they get zipped and moved to `archive/`.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `scavenger.py` | Control script — launches modules via tmux |
+| `scavenger.py` | Control script - launches modules via tmux |
 | `classes/utility.py` | Shared helpers: detection, database, archive, scraper loop |
-| `scraper_*.py` | One per source |
+| `scraper_*.py` | One scraper per source |
 | `dashboard.py` | Web dashboard |
-| `setup.sh` | Idempotent setup — creates dirs, installs deps |
+| `setup.sh` | Setup to create dirs and install dependencies |
 
 ## License
 
