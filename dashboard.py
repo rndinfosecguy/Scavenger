@@ -10,7 +10,7 @@ import time
 PORT = 8080
 HOST = "127.0.0.1"
 
-SOURCES = ["pastebin", "pastesio", "github", "dpaste", "pastecode", "gitlab"]
+SOURCES = ["pastebin", "pastesio", "github", "dpaste", "pastecode", "gitlab", "ideone"]
 
 # Map each source to the tmux session name(s) it runs under.
 # pastebin has two scrapers (archive + track); the rest have one.
@@ -21,6 +21,7 @@ TMUX_SESSIONS = {
     "dpaste":    ["s-dpaste"],
     "pastecode": ["s-pastecode"],
     "gitlab":    ["s-gitlab"],
+    "ideone":    ["s-ideone"],
 }
 
 DATA_DIRS = {
@@ -114,9 +115,9 @@ def build_page():
     def fm(v):
         return f"{v:,}"
 
-    icons = {"pastebin": "📋", "pastesio": "📄", "github": "💻", "dpaste": "📝", "pastecode": "📌", "gitlab": "🦊"}
-    display_names = {"pastebin": "Pastebin", "pastesio": "Pastes.io", "github": "GitHub", "dpaste": "Dpaste", "pastecode": "PasteCode", "gitlab": "GitLab"}
-    source_order = {"pastebin": 0, "pastesio": 1, "github": 2, "dpaste": 3, "pastecode": 4, "gitlab": 5}
+    icons = {"pastebin": "📋", "pastesio": "📄", "github": "💻", "dpaste": "📝", "pastecode": "📌", "gitlab": "🦊", "ideone": "🧩"}
+    display_names = {"pastebin": "Pastebin", "pastesio": "Pastes.io", "github": "GitHub", "dpaste": "Dpaste", "pastecode": "PasteCode", "gitlab": "GitLab", "ideone": "Ideone"}
+    source_order = {"pastebin": 0, "pastesio": 1, "github": 2, "dpaste": 3, "pastecode": 4, "gitlab": 5, "ideone": 6}
 
     labels_row = '<div class="src-row src-header"><span class="src-cell src-cell-icon"></span><span class="src-cell src-cell-name">source</span><span class="src-cell src-cell-num">raw</span><span class="src-cell src-cell-num">pw</span><span class="src-cell src-cell-num">sec</span><span class="src-cell src-cell-tail">scraper status</span></div>'
 

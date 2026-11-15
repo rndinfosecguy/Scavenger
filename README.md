@@ -20,6 +20,7 @@ Multi-source OSINT credential-leak crawler for paste sites. Seven scrapers and a
 | Dpaste.com | polls `https://dpaste.com/public/` | `-d` |
 | Pastecode.io | polls `https://pastecode.io/archive` | `-c` |
 | GitLab snippets | polls `https://gitlab.com/explore/snippets` | `-l` |
+| Ideone.com | polls `https://ideone.com/recent` | `-i` |
 
 Additional: `-D` for the web dashboard, `-e`/`-u` to edit search terms/users.
 
