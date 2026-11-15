@@ -187,19 +187,16 @@ def build_page():
   .header {
     margin-bottom: 1.5rem;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 0.5rem;
     line-height: 1;
   }
-  .header .badge {
-    display: inline-block;
-    border: 1px solid var(--border);
-    padding: 0.35rem 0.6rem;
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: var(--green);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+  .header .logo {
+    width: 13rem;
+    height: 4rem;
+    background: url("scavenger_logo.png") no-repeat center;
+    background-size: contain;
+    border: 0;
   }
   .header .status {
     font-size: 0.6rem;
@@ -220,11 +217,6 @@ def build_page():
     border: 1px solid var(--border);
     padding: 0.85rem 1rem;
     text-align: center;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  .stat-card:hover {
-    border-color: var(--green);
-    box-shadow: var(--glow-green);
   }
   .stat-card .num {
     font-size: 1.6rem;
@@ -342,7 +334,7 @@ def build_page():
 <body>
 <div class="app">
   <div class="header">
-    <span class="badge">scavenger/dashboard</span>
+    <div class="logo"></div>
     <span class="status">refresh 30s</span>
   </div>
 
@@ -381,6 +373,23 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(page)))
             self.end_headers()
             self.wfile.write(page.encode("utf-8"))
+        elif self.path.startswith("/scavenger_logo.") or self.path.startswith("/favicon.ico"):
+            # Strip query string for cache busting
+            filename = self.path.split("?", 1)[0].lstrip("/")
+            if os.path.exists(filename):
+                ext = filename.rsplit(".", 1)[-1].lower()
+                ctype = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "ico": "image/x-icon"}.get(ext, "application/octet-stream")
+                with open(filename, "rb") as f:
+                    data = f.read()
+                self.send_response(200)
+                self.send_header("Connection", "close")
+                self.send_header("Content-Type", ctype)
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+            else:
+                self.send_response(404)
+                self.end_headers()
         else:
             self.send_response(404)
             self.end_headers()
