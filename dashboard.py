@@ -45,6 +45,18 @@ def count_pastesio_attempts():
         return 0
 
 
+def count_archived(source, per_archive=48000):
+    """Estimate archived paste count: number of <source>_*.zip × per_archive."""
+    count = 0
+    try:
+        for f in os.listdir("archive"):
+            if f.startswith(source + "_") and f.endswith(".zip"):
+                count += 1
+    except FileNotFoundError:
+        pass
+    return count * per_archive
+
+
 _TMUX_CACHE = {"ts": 0, "sessions": set()}
 _TMUX_CACHE_TTL = 10
 
@@ -84,7 +96,7 @@ def collect_stats():
     totals = {"raw": 0, "passwords": 0, "sensitive": 0}
 
     for source in SOURCES:
-        raw = count_files(DATA_DIRS["raw"] + "/" + source)
+        raw = count_files(DATA_DIRS["raw"] + "/" + source) + count_archived(source)
         pw = count_files(DATA_DIRS["passwords"] + "/" + source)
         sec = count_files(DATA_DIRS["sensitive"] + "/" + source)
         rows.append((source, raw, pw, sec))
@@ -112,13 +124,13 @@ def build_page():
     sources_rows = ""
     for name, raw, pw, sec in rows_sorted:
         label = display_names[name]
-        suffix = " <span class=\"attempts\">[" + fm(pio) + " tries]</span>" if name == "pastesio" and pio else ""
         online = source_is_online(name)
         status_dot = "<span class=\"dot-online\">● online</span>" if online else "<span class=\"dot-offline\">● offline</span>"
+        tries = " <span class=\"attempts\">[" + fm(pio) + " tries]</span>" if name == "pastesio" and pio else ""
         sources_rows += (
             "<div class=\"src-row\">"
             + "<span class=\"src-cell src-cell-icon\">" + icons[name] + "</span>"
-            + "<span class=\"src-cell src-cell-name\">" + label + suffix + "</span>"
+            + "<span class=\"src-cell src-cell-name\">" + label + tries + "</span>"
             + "<span class=\"src-cell src-cell-num\">" + fm(raw) + "</span>"
             + "<span class=\"src-cell src-cell-num pw\">" + fm(pw) + "</span>"
             + "<span class=\"src-cell src-cell-num sec\">" + fm(sec) + "</span>"
@@ -316,6 +328,7 @@ def build_page():
     .src-header { font-size: 0.55rem; padding: 0.4rem 0.7rem; }
   }
   @media (max-width: 480px) {
+    .attempts { display: none; }
     body { padding: 1rem 0.5rem; }
     .stat-cards { grid-template-columns: repeat(3, 1fr); gap: 0.3rem; }
     .stat-card { padding: 0.6rem 0.5rem; }
