@@ -63,7 +63,7 @@ Detach with `Ctrl+B d`.
 Scripts can also be run directly:
 
 ```console
-python3 scraper_pastebin_archive.py
+python3 scrapers/scraper_pastebin_archive.py
 ```
 
 ## Dashboard
