@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """Dpaste.com scraper — polls https://dpaste.com/public/ for new pastes."""
 import re
 from classes.utility import run_scraper

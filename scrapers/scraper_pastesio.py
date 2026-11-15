@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """Pastes.io random-ID guesser — hits the pastes.io JSON API with random 8-char IDs."""
 import json
 import os

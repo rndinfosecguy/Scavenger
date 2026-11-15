@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """GitHub gist scraper — polls https://gist.github.com/discover for new gists."""
 import gc
 import os

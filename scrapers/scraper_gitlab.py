@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """GitLab snippet scraper — polls https://gitlab.com/explore/snippets for new snippets."""
 import gc
 import re

@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """Pastecode.io scraper — polls https://pastecode.io/archive for new snippets."""
 import re
 from bs4 import BeautifulSoup, SoupStrainer

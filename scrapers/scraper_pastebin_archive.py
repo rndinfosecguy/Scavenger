@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """Pastebin archive scraper — polls https://pastebin.com/archive for new pastes."""
 import re
 from classes.utility import PASTE_ID_RE, run_scraper

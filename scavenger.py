@@ -1,22 +1,23 @@
 import argparse
+import os
 import subprocess
 import sys
 
 # Each entry: (flag_letter, long_name, script, tmux_session, help_text)
 SCRAPERS = [
-    ("a", "pastebin-archive", "scraper_pastebin_archive.py", "s-pastebin-archive",
+    ("a", "pastebin-archive", "scrapers/scraper_pastebin_archive.py", "s-pastebin-archive",
      "Pastebin archive scrape module"),
-    ("t", "pastebin-track",   "scraper_pastebin_track.py",   "s-pastebin-track",
+    ("t", "pastebin-track",   "scrapers/scraper_pastebin_track.py",   "s-pastebin-track",
      "Pastebin user track module"),
-    ("p", "pastesio",         "scraper_pastesio.py",         "s-pastesio",
+    ("p", "pastesio",         "scrapers/scraper_pastesio.py",         "s-pastesio",
      "Pastes.io random-ID scraper"),
-    ("g", "github",           "scraper_github.py",           "s-github",
+    ("g", "github",           "scrapers/scraper_github.py",           "s-github",
      "GitHub gist scraper"),
-    ("d", "dpaste",           "scraper_dpaste.py",           "s-dpaste",
+    ("d", "dpaste",           "scrapers/scraper_dpaste.py",           "s-dpaste",
      "Dpaste.com scraper"),
-    ("c", "pastecode",        "scraper_pastecode.py",        "s-pastecode",
+    ("c", "pastecode",        "scrapers/scraper_pastecode.py",        "s-pastecode",
      "Pastecode.io scraper"),
-    ("l", "gitlab",           "scraper_gitlab.py",           "s-gitlab",
+    ("l", "gitlab",           "scrapers/scraper_gitlab.py",           "s-gitlab",
      "GitLab snippet scraper"),
 ]
 
@@ -83,8 +84,9 @@ def _build_parser():
 def _start_tmux(session_name, script_file):
     from classes.utility import log
     log("OK", "starting " + script_file + " in detached tmux session `" + session_name + "`")
+    repo_root = os.path.dirname(os.path.abspath(__file__))
     subprocess.run(["tmux", "new", "-d", "-s", session_name,
-                    "python3 " + script_file])
+                    "cd " + repo_root + " && python3 " + script_file])
 
 
 def _edit_file(filepath, label):
