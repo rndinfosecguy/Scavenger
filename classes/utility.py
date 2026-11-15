@@ -88,9 +88,20 @@ PRECISE_PATTERNS = [
     ("GitHub token", re.compile(r'\b(ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{23,})\b')),
     ("Slack token", re.compile(r'\b(xox[baprs]-[0-9]{10,12}-[0-9A-Za-z-]{10,}-[0-9A-Za-z-]{20,32})\b')),
     ("private key header", re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH |ENCRYPTED |DSA )?PRIVATE KEY-----')),
-    ("password assignment", re.compile(r'\b(?:passwd|password)\s*[:=]\s*([^\s,:;@]{6,})', re.IGNORECASE)),
-    ("API key assignment", re.compile(r'\bapi[_-]?key\s*[:=]\s*([^\s,:;@]{6,})', re.IGNORECASE)),
-    ("secret assignment", re.compile(r'\bsecret\s*[:=]\s*([^\s,:;@]{6,})', re.IGNORECASE)),
+    ("Google API key", re.compile(r'\b(AIza[0-9A-Za-z_-]{35})\b')),
+    ("SQL insert sensitive table", re.compile(
+        r'\binsert\s+into\s+'
+        r'(users?|passwords?|credentials?|accounts?|admins?|'
+        r'customers?|members?|logins?|sessions?|tokens?|keys?|'
+        r'employees?|patients?|payments?|billing|credit_cards?|'
+        r'bank_accounts?|addresses?|phones?|profiles?|'
+        r'auth|wp_users?|subscriptions?|configurations?|secrets?|'
+        r'backups?|dumps?|leaks?|employees?|orders?|transactions?|'
+        r'contacts?)'
+        r'\b', re.IGNORECASE)),
+    ("password assignment", re.compile(r'\b(?:passwd|password)\s*[:=]\s*([^\s,:;@]{12,})', re.IGNORECASE)),
+    ("API key assignment", re.compile(r'\bapi[_-]?key\s*[:=]\s*([^\s,:;@]{12,})', re.IGNORECASE)),
+    ("secret assignment", re.compile(r'\bsecret\s*[:=]\s*([^\s,:;@]{12,})', re.IGNORECASE)),
 ]
 
 

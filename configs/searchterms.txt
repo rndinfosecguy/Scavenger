@@ -1,11 +1,8 @@
 mysqli_connect(
 The name of the database for WordPress
 Return-Path:
-insert into
-INSERT INTO
 .onion
 github_pat_
-AIza
 sk_live_
 rk_live_
 client_secret
