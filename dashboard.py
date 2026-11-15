@@ -93,6 +93,35 @@ def source_is_online(source):
     return False
 
 
+def collect_top_types(limit=10):
+    """Walk sensitive/password dirs and count detection labels. Returns sorted list of (label, count)."""
+    from collections import Counter
+    counts = Counter()
+
+    for source in SOURCES:
+        # Password dir — all files are email:password
+        try:
+            for f in os.listdir("data/files_with_passwords/" + source):
+                if os.path.isfile(os.path.join("data/files_with_passwords/" + source, f)):
+                    counts["email:password"] += 1
+        except FileNotFoundError:
+            pass
+
+        # Sensitive dir — filenames are {label}_{paste_id}
+        try:
+            for f in os.listdir("data/otherSensitivePastes/" + source):
+                if not os.path.isfile(os.path.join("data/otherSensitivePastes/" + source, f)):
+                    continue
+                # Label is everything before the last underscore
+                label = f.rsplit("_", 1)[0] if "_" in f else f
+                if label:
+                    counts[label] += 1
+        except FileNotFoundError:
+            pass
+
+    return counts.most_common(limit)
+
+
 def collect_stats():
     rows = []
     totals = {"raw": 0, "passwords": 0, "sensitive": 0}
@@ -115,6 +144,22 @@ def build_page():
 
     def fm(v):
         return f"{v:,}"
+
+    top_types = collect_top_types(10)
+    top_total = max((c for _, c in top_types), default=1)
+    top_html = ""
+    if top_types:
+        top_html = '<div class="top-section"><div class="top-header">top detected</div>'
+        for label, count in top_types:
+            bar_pct = count / top_total * 100
+            top_html += (
+                '<div class="top-row">'
+                + '<span class="top-label">' + label + '</span>'
+                + '<span class="top-bar"><span class="top-fill" style="width: ' + str(bar_pct) + '%;"></span></span>'
+                + '<span class="top-count">' + fm(count) + '</span>'
+                + '</div>\n'
+            )
+        top_html += '</div>'
 
     icons = {"pastebin": "📋", "pastesio": "📄", "github": "💻", "dpaste": "📝", "pastecode": "📌", "gitlab": "🦊", "ideone": "🧩", "pastegg": "🥚"}
     display_names = {"pastebin": "Pastebin", "pastesio": "Pastes.io", "github": "GitHub", "dpaste": "Dpaste", "pastecode": "PasteCode", "gitlab": "GitLab", "ideone": "Ideone", "pastegg": "paste.gg"}
@@ -302,6 +347,55 @@ def build_page():
   }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
+  /* ===== TOP DETECTED ===== */
+  .top-section {
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+  }
+  .top-header {
+    color: var(--fg-dim);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .top-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    font-size: 0.7rem;
+  }
+  .top-label {
+    min-width: 10rem;
+    color: var(--fg);
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .top-bar {
+    flex: 1;
+    height: 5px;
+    background: rgba(255,255,255,0.04);
+  }
+  .top-fill {
+    display: block;
+    height: 100%;
+    background: var(--green);
+    transition: width 0.8s ease;
+  }
+  .top-count {
+    min-width: 3.5rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--fg-dim);
+  }
+
   /* ===== FOOTER ===== */
   .footer {
     margin-top: 1.5rem;
@@ -363,6 +457,7 @@ def build_page():
 """ + labels_row + sources_rows + """
   </div>
 
+""" + top_html + """
   <div class="footer">localhost:""" + str(PORT) + """</div>
 </div>
 </body>

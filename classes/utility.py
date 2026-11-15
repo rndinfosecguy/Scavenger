@@ -252,7 +252,11 @@ def save_paste(source_dir, paste_id, pastepath, content, search_terms):
         log("OK", "credentials saved to data/files_with_passwords/" + source_dir + "/ (" + paste_id + ")")
     elif sensitive:
         hitcounter = 1
-        label = sanitize_filename(sensitive[0][1])
+        cat, val, _ = sensitive[0]
+        if cat == "keyword":
+            label = sanitize_filename("keyword_" + val)
+        else:
+            label = sanitize_filename(cat)
         shutil.copy2(pastepath, "data/otherSensitivePastes/" + source_dir + "/" + label + "_" + safe_id)
         log("OK", "sensitive data saved to data/otherSensitivePastes/" + source_dir + "/ (" + paste_id + ")")
     return hitcounter
