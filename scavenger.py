@@ -21,6 +21,8 @@ SCRAPERS = [
      "GitLab snippet scraper"),
     ("i", "ideone",           "scrapers/scraper_ideone.py",           "s-ideone",
      "Ideone.com recent codes scraper"),
+    ("s", "pastegg",          "scrapers/scraper_pastegg.py",          "s-pastegg",
+     "paste.gg API scraper"),
 ]
 
 UTILITIES = [

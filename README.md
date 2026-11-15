@@ -25,6 +25,7 @@ Want to analyze collected pastes or a lot of other plaintext files? Use my proje
 | Pastecode.io | polls `https://pastecode.io/archive` | `-c` |
 | GitLab snippets | polls `https://gitlab.com/explore/snippets` | `-l` |
 | Ideone.com | polls `https://ideone.com/recent` | `-i` |
+| paste.gg | polls `https://api.paste.gg/v1/pastes` | `-s` |
 
 Additional: `-D` for the web dashboard, `-e`/`-u` to edit search terms/users.
 
