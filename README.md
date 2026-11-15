@@ -3,6 +3,11 @@
 
 Multi-source OSINT credential-leak crawler for paste sites.
 
+[![Python 3](https://img.shields.io/badge/python-3.14-blue?logo=python)](https://python.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/rndinfosecguy/Scavenger)](https://github.com/rndinfosecguy/Scavenger)
+[![GitHub stars](https://img.shields.io/github/stars/rndinfosecguy/Scavenger?color=gold&logo=github)](https://github.com/rndinfosecguy/Scavenger)
+
 [bot in action](https://twitter.com/leak_scavenger)
 
 > **FOR RESEARCH ONLY.** This tool is intended for researchers and defenders to detect exposed secrets on public paste sites before attackers exploit them. Do not host or distribute breach data.
