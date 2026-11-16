@@ -172,10 +172,11 @@ def build_page():
     for name, raw, pw, sec in rows_sorted:
         label = display_names[name]
         online = source_is_online(name)
+        row_class = " src-row-offline" if not online else ""
         status_dot = "<span class=\"dot-online\">● online</span>" if online else "<span class=\"dot-offline\">● offline</span>"
         tries = " <span class=\"attempts\">[" + fm(pio) + " tries]</span>" if name == "pastesio" and pio else ""
         sources_rows += (
-            "<div class=\"src-row\">"
+            "<div class=\"src-row" + row_class + "\">"
             + "<span class=\"src-cell src-cell-icon\">" + icons[name] + "</span>"
             + "<span class=\"src-cell src-cell-name\">" + label + tries + "</span>"
             + "<span class=\"src-cell src-cell-num\">" + fm(raw) + "</span>"
@@ -313,6 +314,14 @@ def build_page():
   .src-row:last-child { border-bottom: none; }
   .src-row:hover {
     background: rgba(0,255,65,0.03);
+  }
+  .src-row-offline .src-cell-icon,
+  .src-row-offline .src-cell-name,
+  .src-row-offline .src-cell-num {
+    opacity: 0.35;
+  }
+  .src-row-offline:hover {
+    background: transparent;
   }
   .src-header {
     color: var(--fg-dim);
