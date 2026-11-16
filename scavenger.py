@@ -54,7 +54,7 @@ def _build_panel_lines():
     for flag, name, *_ in UTILITIES:
         lines.append("  -" + flag + ", --" + name + "  " + _help_text(flag, UTILITIES))
     lines.append("")
-    lines.append("  EDITORS  (cannot combine with other flags)")
+    lines.append("  EDITORS  (cannot be combined with other flags)")
     for flag, name, *_ in EDITORS:
         lines.append("  -" + flag + ", --" + name + "  " + _help_text(flag, EDITORS))
     lines.append("")
@@ -85,12 +85,12 @@ def _build_parser():
     return parser
 
 
-def _start_tmux(session_name, script_file):
-    from classes.utility import log
-    log("OK", "starting " + script_file + " in detached tmux session `" + session_name + "`")
+def _start_tmux(session_name, script_file, module_name):
+    from classes.utility import log, divider
     repo_root = os.path.dirname(os.path.abspath(__file__))
     subprocess.run(["tmux", "new", "-d", "-s", session_name,
                     "cd " + repo_root + " && python3 " + script_file])
+    log("OK", "launched " + module_name + "  [" + session_name + "]")
 
 
 def _edit_file(filepath, label):
@@ -104,7 +104,6 @@ def _collect_flags(args, items):
 
 
 def main():
-    _show_panel()
     parser = _build_parser()
     args = parser.parse_args()
 
@@ -117,7 +116,7 @@ def main():
     any_editor = any(editor_flags)
 
     if not (any_scraper or any_utility or any_editor):
-        parser.print_help()
+        _show_panel()
         sys.exit(0)
 
     # Editors cannot be combined with anything
@@ -131,12 +130,12 @@ def main():
     # Start scrapers
     for flag, name, script, session, *_ in SCRAPERS:
         if getattr(args, name.replace("-", "_")):
-            _start_tmux(session, script)
+            _start_tmux(session, script, name)
 
     # Start utilities
     for flag, name, script, session, *_ in UTILITIES:
         if getattr(args, name.replace("-", "_")):
-            _start_tmux(session, script)
+            _start_tmux(session, script, name)
 
     # Run editors
     for flag, name, filepath, *_ in EDITORS:
