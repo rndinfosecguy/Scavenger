@@ -522,5 +522,6 @@ with socketserver.ThreadingTCPServer((HOST, PORT), Handler) as httpd:
     ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ctx.load_cert_chain(cert)
     httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
+    httpd.socket.settimeout(5)
     print("dashboard: https://" + HOST + ":" + str(PORT))
     httpd.serve_forever()
