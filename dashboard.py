@@ -492,17 +492,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(page)))
             self.end_headers()
             self.wfile.write(page.encode("utf-8"))
-        elif self.path.startswith("/scavenger_logo.") or self.path.startswith("/favicon.ico"):
-            # Strip query string for cache busting
-            filename = self.path.split("?", 1)[0].lstrip("/")
-            if os.path.exists(filename):
-                ext = filename.rsplit(".", 1)[-1].lower()
-                ctype = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "ico": "image/x-icon"}.get(ext, "application/octet-stream")
-                with open(filename, "rb") as f:
+        elif self.path.startswith("/scavenger_logo."):
+            # Serve the logo from a fixed path — no user input involved
+            logo = "scavenger_logo.png"
+            if os.path.exists(logo):
+                with open(logo, "rb") as f:
                     data = f.read()
                 self.send_response(200)
                 self.send_header("Connection", "close")
-                self.send_header("Content-Type", ctype)
+                self.send_header("Content-Type", "image/png")
                 self.send_header("Content-Length", str(len(data)))
                 self.end_headers()
                 self.wfile.write(data)
