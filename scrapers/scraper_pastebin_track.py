@@ -7,7 +7,7 @@ import time
 from bs4 import BeautifulSoup, SoupStrainer
 import requests
 from classes.utility import (
-    PASTE_ID_RE, ScavUtility, DatabaseTracker, banner, divider, log, panel, sanitize_filename, short, setup_signals,
+    PASTE_ID_RE, ScavUtility, DatabaseTracker, banner, divider, log, panel, sanitize_filename, short, setup_signals, mark_crawled,
 )
 
 running = setup_signals()
@@ -121,6 +121,7 @@ while running[0]:
             log("ERROR", "user '" + user + "' failed: " + str(e))
 
     if running[0]:
+        mark_crawled("pastebin")
         log("INFO", "sleeping 3h before the next round")
         remaining = 10800
         while remaining > 0 and running[0]:

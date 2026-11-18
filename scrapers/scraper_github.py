@@ -12,7 +12,7 @@ import requests
 from bs4 import BeautifulSoup, SoupStrainer
 
 from classes.utility import (
-    DatabaseTracker, ScavUtility, banner, divider, log, sanitize_filename, short, setup_signals,
+    DatabaseTracker, ScavUtility, banner, divider, log, sanitize_filename, short, setup_signals, mark_crawled,
 )
 
 running = setup_signals()
@@ -107,6 +107,7 @@ while running[0]:
         gc.collect()
         divider()
         log("OK", "pass complete — crawled " + str(newcounter) + " new gist(s), found " + str(hitcounter) + " hit(s)")
+        mark_crawled("github")
         backoff = 5
         log("INFO", "sleeping 240s before the next pass")
         time.sleep(240)

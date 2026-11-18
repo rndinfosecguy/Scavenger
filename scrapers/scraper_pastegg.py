@@ -7,7 +7,7 @@ import time
 
 import requests
 from classes.utility import (
-    ScavUtility, DatabaseTracker, banner, divider, log, sanitize_filename, short, save_paste, setup_signals,
+    ScavUtility, DatabaseTracker, banner, divider, log, sanitize_filename, short, save_paste, setup_signals, mark_crawled,
 )
 
 running = setup_signals()
@@ -125,6 +125,7 @@ while running[0]:
 
         divider()
         log("OK", "pass complete — crawled " + str(newcounter) + " new, found " + str(hitcounter) + " hit(s)")
+        mark_crawled("pastegg")
         backoff = 5
         log("INFO", "sleeping 180s before the next pass")
         remaining = 180

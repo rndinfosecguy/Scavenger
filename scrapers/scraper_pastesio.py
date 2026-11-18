@@ -10,7 +10,7 @@ import time
 
 import requests
 from classes.utility import (
-    ScavUtility, DatabaseTracker, banner, divider, log, sanitize_filename, short, setup_signals,
+    ScavUtility, DatabaseTracker, banner, divider, log, sanitize_filename, short, setup_signals, mark_crawled,
 )
 
 running = setup_signals()
@@ -128,6 +128,7 @@ while running[0]:
             tried.add(pid)
             log("INFO", "trying " + pid + " — miss")
         handle(resp)
+        mark_crawled("pastesio")
         time.sleep(random.randint(5, 10))
     except Exception as e:
         log("ERROR", "request failed for " + pid + ": " + str(e))

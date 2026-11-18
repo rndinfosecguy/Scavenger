@@ -14,19 +14,6 @@ HOST = "127.0.0.1"
 
 SOURCES = ["pastebin", "pastesio", "github", "dpaste", "pastecode", "gitlab", "ideone", "pastegg"]
 
-# Map each source to the tmux session name(s) it runs under.
-# pastebin has two scrapers (archive + track); the rest have one.
-TMUX_SESSIONS = {
-    "pastebin": ["s-pastebin-archive", "s-pastebin-track"],
-    "pastesio":  ["s-pastesio"],
-    "github":    ["s-github"],
-    "dpaste":    ["s-dpaste"],
-    "pastecode": ["s-pastecode"],
-    "gitlab":    ["s-gitlab"],
-    "ideone":    ["s-ideone"],
-    "pastegg":   ["s-pastegg"],
-}
-
 DATA_DIRS = {
     "raw": "data/raw_pastes",
     "passwords": "data/files_with_passwords",
@@ -61,38 +48,30 @@ def count_archived(source, per_archive=48000):
     return count * per_archive
 
 
-_TMUX_CACHE = {"ts": 0, "sessions": set()}
-_TMUX_CACHE_TTL = 10
-
-
-def _get_active_sessions():
-    """Return a set of active tmux session names, cached for _TMUX_CACHE_TTL seconds.
-
-    Calls `tmux list-sessions` once and reuses the result for rapid refreshes.
-    """
-    now = time.time()
-    if now - _TMUX_CACHE["ts"] < _TMUX_CACHE_TTL:
-        return _TMUX_CACHE["sessions"]
+def get_last_crawled(source):
+    """Read the last-crawled timestamp file and return (timestamp, short_display)."""
     try:
-        result = subprocess.run(
-            ["tmux", "list-sessions", "-F", "#{session_name}"],
-            capture_output=True, text=True, timeout=5,
-        )
-        sessions = set(result.stdout.strip().splitlines()) if result.returncode == 0 else set()
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        sessions = set()
-    _TMUX_CACHE["ts"] = now
-    _TMUX_CACHE["sessions"] = sessions
-    return sessions
+        with open("logs/" + source + "_last_crawled.txt") as f:
+            ts = float(f.read().strip())
+        elapsed = time.time() - ts
+        if elapsed < 60:
+            return (ts, "just now")
+        elif elapsed < 3600:
+            return (ts, str(int(elapsed // 60)) + "m")
+        else:
+            hours = int(elapsed // 3600)
+            mins = int((elapsed % 3600) // 60)
+            return (ts, str(hours) + "h " + str(mins) + "m")
+    except (FileNotFoundError, ValueError):
+        return (0, "never")
 
 
 def source_is_online(source):
-    """Return True if at least one tmux session for this source is alive."""
-    active = _get_active_sessions()
-    for sess in TMUX_SESSIONS.get(source, []):
-        if sess in active:
-            return True
-    return False
+    """Return True if scraper wrote a last-crawled timestamp within the last hour."""
+    ts, _ = get_last_crawled(source)
+    if ts == 0:
+        return False
+    return (time.time() - ts) < 3600
 
 
 def collect_top_types(limit=10):
@@ -176,6 +155,8 @@ def build_page():
         online = source_is_online(name)
         row_class = " src-row-offline" if not online else ""
         status_dot = "<span class=\"dot-online\">● online</span>" if online else "<span class=\"dot-offline\">● offline</span>"
+        _, last_str = get_last_crawled(name)
+        status_dot += " <span class=\"crawled-at\">· " + last_str + "</span>"
         tries = " <span class=\"attempts\">[" + fm(pio) + " tries]</span>" if name == "pastesio" and pio else ""
         sources_rows += (
             "<div class=\"src-row" + row_class + "\">"
@@ -355,6 +336,11 @@ def build_page():
   }
   .dot-offline {
     color: var(--red);
+  }
+  .crawled-at {
+    font-size: 0.6rem;
+    font-weight: 400;
+    color: var(--fg-dim);
   }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 

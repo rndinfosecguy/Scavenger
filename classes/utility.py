@@ -245,6 +245,15 @@ class DatabaseTracker:
 DEFAULT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
 
 
+def mark_crawled(source_name):
+    """Write a timestamp recording that a scraper just completed a pass."""
+    try:
+        with open("logs/" + source_name + "_last_crawled.txt", "w") as f:
+            f.write(str(time.time()))
+    except OSError:
+        pass
+
+
 def save_paste(source_dir, paste_id, pastepath, content, search_terms):
     """Analyze content and save to appropriate dir. Returns hit count."""
     safe_id = paste_id.replace("/", "--")
@@ -426,6 +435,7 @@ def run_scraper(
 
             divider()
             log("OK", "pass complete — crawled " + str(newcounter) + " new, found " + str(hitcounter) + " hit(s)")
+            mark_crawled(source_name)
             backoff = 5
 
             if running[0]:

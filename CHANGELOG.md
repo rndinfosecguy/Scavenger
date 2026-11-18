@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.1.0 — 2026-11-18
+
+### Search terms
+- **Auto-reload** — scrapers now detect changes to `configs/searchterms.txt` on each pass and reload automatically. No more restart needed after editing. (`-e` shows "will be picked up automatically on the next pass".)
+- **Validation** — editing via `-e` now warns if a term is too short (≤3 chars) or overlaps with a built-in precise pattern.
+
+### Dashboard
+- **Last-crawled timestamps** — each source row shows when it last completed a pass (`· 3m`, `· 1h 15m`, `· never`)
+- **Online/offline by timestamp** — a source is considered offline if no crawl happened in the last hour, regardless of tmux sessions. The old tmux-based check (which could show orphaned sessions as "online") is replaced entirely.
+- **Graceful shutdown** — `Ctrl+C` now exits cleanly with a shutdown message.
+- **Fixed SSL handshake hang** — replaced `serve_forever()` with an interruptible `handle_request()` loop. Stuck TLS connections no longer block the server.
+
+### Other
+- **Semantic versioning** — added `VERSION` file and `CHANGELOG.md`.
+- **Version badge in README** with link to changelog.
+
 ## 3.0.0 — 2026-11-18
 
 ### Major changes
