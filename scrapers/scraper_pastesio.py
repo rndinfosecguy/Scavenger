@@ -18,6 +18,8 @@ tools = ScavUtility()
 session = requests.session()
 searchTerms = tools.loadSearchTerms()
 
+_last_mtime = 0
+
 try:
     with open("configs/pastesio.json") as f:
         cfg = json.load(f)
@@ -100,6 +102,18 @@ banner(["s-pastesio", "random-ID guesser — GET https://pastes.io/api/pastes/{i
         "tier: " + TIER + " · key: " + ("set" if API_KEY else "none")])
 
 while running[0]:
+    # Auto-reload search terms if file changed on disk
+    try:
+        mtime = os.path.getmtime("configs/searchterms.txt")
+        if mtime != _last_mtime:
+            _last_mtime = mtime
+            new_terms = tools.loadSearchTerms()
+            searchTerms.clear()
+            searchTerms.update(new_terms)
+            log("OK", "reloaded " + str(len(searchTerms)) + " search terms (file changed)")
+    except OSError:
+        pass
+
     tools.archivepastes("data/raw_pastes/pastesio")
     pid = random_id()
     if tried.has(pid):

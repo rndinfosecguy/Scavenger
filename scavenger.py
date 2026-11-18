@@ -96,7 +96,33 @@ def _start_tmux(session_name, script_file, module_name):
 def _edit_file(filepath, label):
     from classes.utility import log
     subprocess.run(["vi", filepath])
-    log("WARN", label + " changed - restart the affected module")
+    if label == "edit-search":
+        _validate_search_terms()
+    log("WARN", label + " changed - will be picked up automatically on the next pass")
+
+
+def _validate_search_terms():
+    """Check searchterms.txt for entries that may cause noise."""
+    from classes.utility import log, PRECISE_PATTERNS
+    warnings = []
+    try:
+        for line in open("configs/searchterms.txt"):
+            line = line.strip()
+            if not line:
+                continue
+            if len(line) <= 3:
+                warnings.append(f"  '{line}' — too short, likely false positives")
+            for name, _ in PRECISE_PATTERNS:
+                if line.lower() in name.lower():
+                    warnings.append(f"  '{line}' — overlaps with precise pattern '{name}'")
+    except FileNotFoundError:
+        return
+    if warnings:
+        log("WARN", "potential issues in searchterms.txt:")
+        for w in warnings:
+            log("WARN", w)
+    else:
+        log("OK", "no issues found in searchterms.txt")
 
 
 def _collect_flags(args, items):

@@ -16,6 +16,8 @@ session = requests.session()
 session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"})
 searchTerms = tools.loadSearchTerms()
 
+_last_mtime = 0
+
 tracked = DatabaseTracker("logs/tracker.db", table="tried_pastegg")
 backoff = 5
 
@@ -24,6 +26,18 @@ banner(["s-pastegg", "polls https://api.paste.gg/v1/pastes for new pastes",
 
 while running[0]:
     divider("pastegg pass")
+    # Auto-reload search terms if file changed on disk
+    try:
+        mtime = os.path.getmtime("configs/searchterms.txt")
+        if mtime != _last_mtime:
+            _last_mtime = mtime
+            new_terms = tools.loadSearchTerms()
+            searchTerms.clear()
+            searchTerms.update(new_terms)
+            log("OK", "reloaded " + str(len(searchTerms)) + " search terms (file changed)")
+    except OSError:
+        pass
+
     log("INFO", "archiving raw_pastes if the fetch threshold is reached")
     tools.archivepastes("data/raw_pastes/pastegg")
 

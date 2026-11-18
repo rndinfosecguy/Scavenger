@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """Pastebin user track scraper — follows users listed in configs/users.txt."""
+import os
 import shutil
 import time
 from bs4 import BeautifulSoup, SoupStrainer
@@ -14,13 +15,27 @@ tools = ScavUtility()
 session = requests.session()
 session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0"})
 searchTerms = tools.loadSearchTerms()
+
 tracked = DatabaseTracker("logs/tracker.db", table="crawled", legacy_log="logs/alreadytrackedpastes.log")
 
 banner(["s-pastebin-track", "user track - follows configs/users.txt targets",
         str(len(searchTerms)) + " search terms loaded · email:password detection always on"])
 
+_last_mtime = 0
 iterator = 1
 while running[0]:
+    # Auto-reload search terms if file changed on disk
+    try:
+        mtime = os.path.getmtime("configs/searchterms.txt")
+        if mtime != _last_mtime:
+            _last_mtime = mtime
+            new_terms = tools.loadSearchTerms()
+            searchTerms.clear()
+            searchTerms.update(new_terms)
+            log("OK", "reloaded " + str(len(searchTerms)) + " search terms (file changed)")
+    except OSError:
+        pass
+
     with open("configs/users.txt", "r") as f:
         relevantUsers = [line.strip() for line in f if line.strip()]
 

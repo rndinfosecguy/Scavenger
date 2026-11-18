@@ -341,8 +341,21 @@ def run_scraper(
         return s
 
     session = make_session()
+    _last_mtime = 0
 
     while running[0]:
+        # Auto-reload search terms if file changed on disk
+        try:
+            mtime = os.path.getmtime("configs/searchterms.txt")
+            if mtime != _last_mtime:
+                _last_mtime = mtime
+                new_terms = tools.loadSearchTerms()
+                search_terms.clear()
+                search_terms.update(new_terms)
+                log("OK", "reloaded " + str(len(search_terms)) + " search terms (file changed)")
+        except OSError:
+            pass
+
         if per_pass_session:
             session = make_session()
 
