@@ -1,6 +1,8 @@
 import datetime
 import http.server
 import os
+import signal
+import socket
 import sqlite3
 import socketserver
 import ssl
@@ -516,19 +518,47 @@ class Handler(http.server.BaseHTTPRequestHandler):
         print(ts + " " + fmt % args)
 
 
-with socketserver.ThreadingTCPServer((HOST, PORT), Handler) as httpd:
-    httpd.daemon_threads = True
-    httpd.allow_reuse_address = True
-    cert = "logs/dashboard.pem"
-    if not os.path.exists(cert):
-        subprocess.run([
-            "openssl", "req", "-x509", "-newkey", "rsa:2048", "-keyout", cert,
-            "-out", cert, "-days", "3650", "-nodes",
-            "-subj", "/CN=localhost",
-        ], capture_output=True)
-    ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    ctx.load_cert_chain(cert)
-    httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
-    httpd.socket.settimeout(5)
-    print("dashboard: https://" + HOST + ":" + str(PORT))
-    httpd.serve_forever()
+class _SSLServer(socketserver.ThreadingTCPServer):
+    """ThreadingTCPServer that wraps each client connection with SSL individually.
+
+    Unlike wrapping the server socket with SSL, this ensures accept() never blocks
+    on a stuck TLS handshake — each connection gets its own 5-second timeout.
+    """
+    daemon_threads = True
+    allow_reuse_address = True
+
+    def __init__(self, addr, handler, cert):
+        super().__init__(addr, handler)
+        ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ctx.load_cert_chain(cert)
+        self._ssl_ctx = ctx
+
+    def get_request(self):
+        sock, addr = self.socket.accept()
+        sock.settimeout(5)
+        try:
+            return self._ssl_ctx.wrap_socket(sock, server_side=True), addr
+        except (ssl.SSLError, OSError) as e:
+            sock.close()
+            raise OSError("SSL handshake failed")
+
+
+cert = "logs/dashboard.pem"
+if not os.path.exists(cert):
+    subprocess.run([
+        "openssl", "req", "-x509", "-newkey", "rsa:2048", "-keyout", cert,
+        "-out", cert, "-days", "3650", "-nodes",
+        "-subj", "/CN=localhost",
+    ], capture_output=True)
+
+httpd = _SSLServer((HOST, PORT), Handler, cert)
+
+print("dashboard: https://" + HOST + ":" + str(PORT))
+try:
+    while True:
+        httpd.handle_request()
+except KeyboardInterrupt:
+    ts = datetime.datetime.now().strftime("%H:%M:%S")
+    print("\n" + ts + " shutting down dashboard...")
+    httpd.server_close()
+    sys.exit(0)
