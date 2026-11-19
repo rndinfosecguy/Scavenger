@@ -57,11 +57,11 @@ def get_last_crawled(source):
         if elapsed < 60:
             return (ts, "just now")
         elif elapsed < 3600:
-            return (ts, str(int(elapsed // 60)) + "m")
+            return (ts, str(int(elapsed // 60)) + "m ago")
         else:
             hours = int(elapsed // 3600)
             mins = int((elapsed % 3600) // 60)
-            return (ts, str(hours) + "h " + str(mins) + "m")
+            return (ts, str(hours) + "h " + str(mins) + "m ago")
     except (FileNotFoundError, ValueError):
         return (0, "never")
 
@@ -156,7 +156,6 @@ def build_page():
         row_class = " src-row-offline" if not online else ""
         status_dot = "<span class=\"dot-online\">● online</span>" if online else "<span class=\"dot-offline\">● offline</span>"
         _, last_str = get_last_crawled(name)
-        status_dot += " <span class=\"crawled-at\">· " + last_str + "</span>"
         tries = " <span class=\"attempts\">[" + fm(pio) + " tries]</span>" if name == "pastesio" and pio else ""
         sources_rows += (
             "<div class=\"src-row" + row_class + "\">"
@@ -165,7 +164,10 @@ def build_page():
             + "<span class=\"src-cell src-cell-num\">" + fm(raw) + "</span>"
             + "<span class=\"src-cell src-cell-num pw\">" + fm(pw) + "</span>"
             + "<span class=\"src-cell src-cell-num sec\">" + fm(sec) + "</span>"
-            + "<span class=\"src-cell src-cell-tail\">" + status_dot + "</span>"
+            + "<span class=\"src-cell src-cell-tail\">"
+            + status_dot
+            + "<span class=\"crawled-at\">" + last_str + "</span>"
+            + "</span>"
             + "</div>\n"
         )
 
@@ -322,7 +324,7 @@ def build_page():
   .src-cell-num   { justify-content: flex-end; font-variant-numeric: tabular-nums; }
   .src-cell-num.pw  { color: var(--green); }
   .src-cell-num.sec { color: var(--purple); }
-  .src-cell-tail  { justify-content: center; }
+  .src-cell-tail  { justify-content: center; gap: 0.25rem; }
 
   .attempts {
     color: var(--fg-dim);
@@ -338,6 +340,8 @@ def build_page():
     color: var(--red);
   }
   .crawled-at {
+    min-width: 6rem;
+    text-align: right;
     font-size: 0.6rem;
     font-weight: 400;
     color: var(--fg-dim);

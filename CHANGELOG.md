@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.2 — 2026-11-19
+
+### Fixed
+- **Status column alignment** — status dots now align vertically across all source rows. Time text (`3m ago`, `1h 15m ago`) is right-aligned with a fixed minimum width so the dots don't shift when time strings differ in length.
+
 ## 3.1.1 — 2026-11-19
 
 ### Fixed
