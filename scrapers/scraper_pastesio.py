@@ -73,7 +73,11 @@ def handle(response):
             log("OK", "credentials saved to data/files_with_passwords/pastesio/ (" + paste_id + ")")
             shutil.copy2(pastepath, "data/files_with_passwords/pastesio/.")
         elif sensitive:
-            label = sanitize_filename(sensitive[0][1])
+            cat, val, _ = sensitive[0]
+            if cat == "keyword":
+                label = sanitize_filename("keyword_" + val)
+            else:
+                label = sanitize_filename(cat)
             log("OK", "sensitive data saved to data/otherSensitivePastes/pastesio/ (" + paste_id + ")")
             shutil.copy2(pastepath, "data/otherSensitivePastes/pastesio/" + label + "_" + paste_id)
         tried.add(paste_id)

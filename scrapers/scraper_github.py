@@ -90,7 +90,11 @@ while running[0]:
                     shutil.copy2(pastepath, "data/files_with_passwords/github/.")
                 elif sensitive:
                     hitcounter += 1
-                    label = sanitize_filename(sensitive[0][1])
+                    cat, val, _ = sensitive[0]
+                    if cat == "keyword":
+                        label = sanitize_filename("keyword_" + val)
+                    else:
+                        label = sanitize_filename(cat)
                     log("OK", "sensitive data saved to data/otherSensitivePastes/github/ (" + gist_id + ")")
                     shutil.copy2(pastepath, "data/otherSensitivePastes/github/" + label + "_" + gist_id)
                 tracked.add(gist_id)

@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.1 — 2026-11-19
+
+### Fixed
+- **Label cleanup in standalone scrapers** — `scraper_github.py`, `scraper_pastebin_track.py`, and `scraper_pastesio.py` still used the old value-based label (`sanitize_filename(sensitive[0][1])`) instead of the category name. This caused filenames like `before_content_{id}` instead of `secret_assignment_{id}`. Now all 9 scrapers consistently use the detection category name as the filename prefix.
+
 ## 3.1.0 — 2026-11-18
 
 ### Search terms
