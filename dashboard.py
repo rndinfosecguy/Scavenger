@@ -176,7 +176,6 @@ def build_page():
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="refresh" content="30">
 <title>scavenger :: dashboard</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&display=swap');
@@ -445,13 +444,13 @@ def build_page():
 <div class="app">
   <div class="header">
     <div class="logo"></div>
-    <span class="status">refresh 30s</span>
+    <span class="status">updated every 60s</span>
   </div>
 
   <div class="stat-cards">
-    <div class="stat-card"><div class="num raw-num">""" + fm(totals["raw"]) + """</div><div class="label">Raw Pastes</div></div>
-    <div class="stat-card"><div class="num pw-num">""" + fm(totals["passwords"]) + """</div><div class="label">Passwords</div></div>
-    <div class="stat-card"><div class="num sec-num">""" + fm(totals["sensitive"]) + """</div><div class="label">Secrets</div></div>
+    <div class="stat-card"><div class="num raw-num" id="total-raw">""" + fm(totals["raw"]) + """</div><div class="label">Raw Pastes</div></div>
+    <div class="stat-card"><div class="num pw-num" id="total-pw">""" + fm(totals["passwords"]) + """</div><div class="label">Passwords</div></div>
+    <div class="stat-card"><div class="num sec-num" id="total-sec">""" + fm(totals["sensitive"]) + """</div><div class="label">Secrets</div></div>
   </div>
 
   <div class="src-table">
@@ -461,6 +460,15 @@ def build_page():
 """ + top_html + """
   <div class="footer">localhost:""" + str(PORT) + """</div>
 </div>
+<script>
+(function f(){fetch('/api/stats').then(function(r){return r.json()}).then(function(d){
+var c=function(x){return x.toLocaleString('en')};
+document.getElementById('total-raw').textContent=c(d.totals.raw);
+document.getElementById('total-pw').textContent=c(d.totals.pw);
+document.getElementById('total-sec').textContent=c(d.totals.sec);
+}).catch(function(e){});
+setTimeout(f,60000)})();
+</script>
 </body>
 </html>"""
 
@@ -481,9 +489,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Connection", "close")
             self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(page)))
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Content-Length", str(len(page.encode("utf-8"))))
             self.end_headers()
             self.wfile.write(page.encode("utf-8"))
+        elif self.path == "/api/stats":
+            self._serve_stats()
         elif self.path.startswith("/scavenger_logo."):
             # Serve the logo from a fixed path — no user input involved
             logo = "scavenger_logo.png"
@@ -506,6 +517,38 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         ts = datetime.datetime.now().strftime("%H:%M:%S")
         print(ts + " " + fmt % args)
+
+    def _serve_stats(self):
+        """Serve /api/stats as JSON for the live-update script."""
+        import json
+        rows, totals, pio = collect_stats()
+        sources = []
+        icon_map = {"pastebin": "📋", "pastesio": "📄", "github": "💻", "dpaste": "📝", "pastecode": "📌", "gitlab": "🦊", "ideone": "🧩", "pastegg": "🥚"}
+        display_map = {"pastebin": "Pastebin", "pastesio": "Pastes.io", "github": "GitHub", "dpaste": "Dpaste", "pastecode": "PasteCode", "gitlab": "GitLab", "ideone": "Ideone", "pastegg": "paste.gg"}
+        for name, raw, pw, sec in rows:
+            online = source_is_online(name)
+            _, last_str = get_last_crawled(name)
+            sources.append({
+                "name": name,
+                "display": display_map.get(name, name),
+                "icon": icon_map.get(name, ""),
+                "raw": raw, "pw": pw, "sec": sec,
+                "online": online,
+                "last": last_str,
+            })
+        top_types = [{"label": lab, "count": cnt} for lab, cnt in collect_top_types(10)]
+        data = json.dumps({
+            "totals": {"raw": totals["raw"], "pw": totals["passwords"], "sec": totals["sensitive"]},
+            "sources": sources,
+            "top": top_types,
+            "pio": pio,
+        })
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Content-Length", str(len(data.encode("utf-8"))))
+        self.end_headers()
+        self.wfile.write(data.encode("utf-8"))
 
 
 class _SSLServer(socketserver.ThreadingTCPServer):

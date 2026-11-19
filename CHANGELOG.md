@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.3 — 2026-11-19
+
+### Fixed
+- **Dashboard page truncated in browser** — `Content-Length` was calculated using character count instead of byte count. Multi-byte Unicode characters (box-drawing, emoji) caused the reported length to be shorter than the actual page, making browsers stop reading before the closing HTML tags and JavaScript. The page now reports correct byte-length headers.
+
 ## 3.1.2 — 2026-11-19
 
 ### Fixed
