@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.2.0 — 2026-11-20
+
+### Added
+- **Recent detections feed on the dashboard** — shows the last 10 detected pastes with timestamp, source, and detection type. Updates live via the `/api/stats` endpoint without page refresh. Includes `collect_recent()` and corresponding CSS/JS.
+
 ## 3.1.3 — 2026-11-19
 
 ### Fixed

@@ -103,6 +103,33 @@ def collect_top_types(limit=10):
     return counts.most_common(limit)
 
 
+def collect_recent(limit=10):
+    """Return the most recent detection entries sorted by file mtime."""
+    entries = []
+    for source in SOURCES:
+        # Password files (email:password)
+        try:
+            for f in os.listdir("data/files_with_passwords/" + source):
+                path = os.path.join("data/files_with_passwords/" + source, f)
+                if not os.path.isfile(path):
+                    continue
+                entries.append((os.path.getmtime(path), source, "email:password", f))
+        except FileNotFoundError:
+            pass
+        # Sensitive files (label_pasteId)
+        try:
+            for f in os.listdir("data/otherSensitivePastes/" + source):
+                path = os.path.join("data/otherSensitivePastes/" + source, f)
+                if not os.path.isfile(path):
+                    continue
+                label = f.rsplit("_", 1)[0] if "_" in f else f
+                entries.append((os.path.getmtime(path), source, label, f))
+        except FileNotFoundError:
+            pass
+    entries.sort(key=lambda x: x[0], reverse=True)
+    return entries[:limit]
+
+
 def collect_stats():
     rows = []
     totals = {"raw": 0, "passwords": 0, "sensitive": 0}
@@ -141,6 +168,32 @@ def build_page():
                 + '</div>\n'
             )
         top_html += '</div>'
+
+    icons = {"pastebin": "📋", "pastesio": "📄", "github": "💻", "dpaste": "📝", "pastecode": "📌", "gitlab": "🦊", "ideone": "🧩", "pastegg": "🥚"}
+    display_names = {"pastebin": "Pastebin", "pastesio": "Pastes.io", "github": "GitHub", "dpaste": "Dpaste", "pastecode": "PasteCode", "gitlab": "GitLab", "ideone": "Ideone", "pastegg": "paste.gg"}
+
+    recent = collect_recent(10)
+    recent_html = ""
+    if recent:
+        recent_html = '<div class="top-section" id="recent-section"><div class="top-header">recent detections</div>'
+        for mtime, source, label, _ in recent:
+            age = time.time() - mtime
+            if age < 60:
+                ts = "just now"
+            elif age < 3600:
+                ts = str(int(age // 60)) + "m ago"
+            elif age < 86400:
+                ts = str(int(age // 3600)) + "h ago"
+            else:
+                ts = str(int(age // 86400)) + "d ago"
+            recent_html += (
+                '<div class="recent-row">'
+                + '<span class="recent-time">' + ts + '</span>'
+                + '<span class="recent-source">' + icons.get(source, "") + " " + display_names.get(source, source) + '</span>'
+                + '<span class="recent-label">' + label + '</span>'
+                + '</div>\n'
+            )
+        recent_html += '</div>'
 
     icons = {"pastebin": "📋", "pastesio": "📄", "github": "💻", "dpaste": "📝", "pastecode": "📌", "gitlab": "🦊", "ideone": "🧩", "pastegg": "🥚"}
     display_names = {"pastebin": "Pastebin", "pastesio": "Pastes.io", "github": "GitHub", "dpaste": "Dpaste", "pastecode": "PasteCode", "gitlab": "GitLab", "ideone": "Ideone", "pastegg": "paste.gg"}
@@ -396,6 +449,32 @@ def build_page():
     color: var(--fg-dim);
   }
 
+  /* ===== RECENT DETECTIONS ===== */
+  .recent-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.2rem 0;
+    font-size: 0.7rem;
+  }
+  .recent-time {
+    min-width: 4rem;
+    color: var(--fg-dim);
+    font-size: 0.6rem;
+  }
+  .recent-source {
+    min-width: 7rem;
+    color: var(--fg);
+    white-space: nowrap;
+  }
+  .recent-label {
+    color: var(--fg-bright);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   /* ===== FOOTER ===== */
   .footer {
     margin-top: 1.5rem;
@@ -457,15 +536,27 @@ def build_page():
 """ + labels_row + sources_rows + """
   </div>
 
-""" + top_html + """
+""" + top_html + recent_html + """
   <div class="footer">localhost:""" + str(PORT) + """</div>
 </div>
 <script>
+var I={'pastebin':'📋','pastesio':'📄','github':'💻','dpaste':'📝','pastecode':'📌','gitlab':'🦊','ideone':'🧩','pastegg':'🥚'};
+var D={'pastebin':'Pastebin','pastesio':'Pastes.io','github':'GitHub','dpaste':'Dpaste','pastecode':'PasteCode','gitlab':'GitLab','ideone':'Ideone','pastegg':'paste.gg'};
 (function f(){fetch('/api/stats').then(function(r){return r.json()}).then(function(d){
 var c=function(x){return x.toLocaleString('en')};
 document.getElementById('total-raw').textContent=c(d.totals.raw);
 document.getElementById('total-pw').textContent=c(d.totals.pw);
 document.getElementById('total-sec').textContent=c(d.totals.sec);
+var rs=document.getElementById('recent-section');
+if(rs&&d.recent&&d.recent.length){
+var h='<div class="top-header">recent detections</div>';
+for(var i=0;i<d.recent.length;i++){
+var r=d.recent[i],a=Date.now()/1e3-r.ts;
+var t=a<60?'just now':a<3600?Math.floor(a/60)+'m ago':a<86400?Math.floor(a/3600)+'h ago':Math.floor(a/86400)+'d ago';
+h+='<div class="recent-row"><span class="recent-time">'+t+'</span><span class="recent-source">'+(I[r.source]||'')+' '+(D[r.source]||r.source)+'</span><span class="recent-label">'+r.label+'</span></div>';
+}
+rs.innerHTML=h;
+}
 }).catch(function(e){});
 setTimeout(f,60000)})();
 </script>
@@ -537,10 +628,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 "last": last_str,
             })
         top_types = [{"label": lab, "count": cnt} for lab, cnt in collect_top_types(10)]
+        recent = [{"ts": mtime, "source": s, "label": l} for mtime, s, l, _ in collect_recent(10)]
         data = json.dumps({
             "totals": {"raw": totals["raw"], "pw": totals["passwords"], "sec": totals["sensitive"]},
             "sources": sources,
             "top": top_types,
+            "recent": recent,
             "pio": pio,
         })
         self.send_response(200)
