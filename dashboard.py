@@ -376,7 +376,7 @@ def build_page():
   .src-cell-num   { justify-content: flex-end; font-variant-numeric: tabular-nums; }
   .src-cell-num.pw  { color: var(--green); }
   .src-cell-num.sec { color: var(--purple); }
-  .src-cell-tail  { justify-content: center; gap: 0.25rem; }
+  .src-cell-tail  { justify-content: center; gap: 0.25rem; overflow: hidden; white-space: nowrap; }
 
   .attempts {
     color: var(--fg-dim);
@@ -504,18 +504,31 @@ def build_page():
   }
   @media (max-width: 480px) {
     .attempts { display: none; }
-    body { padding: 1rem 0.5rem; }
-    .stat-cards { grid-template-columns: repeat(3, 1fr); gap: 0.3rem; }
-    .stat-card { padding: 0.6rem 0.5rem; }
-    .stat-card .num { font-size: 1.1rem; }
+    .app { width: 100%; }
+    body { padding: 0.75rem 0.4rem; }
+    .stat-cards { grid-template-columns: repeat(2, 1fr); gap: 0.25rem; }
+    .stat-card { padding: 0.5rem 0.4rem; }
+    .stat-card .num { font-size: 1rem; }
+    .stat-card .label { font-size: 0.5rem; letter-spacing: 0.08em; }
+    .src-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .src-row {
-      grid-template-columns: 1.2rem 1fr 2.6rem 2.6rem 2.6rem 1fr;
-      column-gap: 0.25rem;
-      font-size: 0.62rem;
-      padding: 0.4rem 0.5rem;
+      grid-template-columns: 0.8rem 1fr 2.2rem 2.2rem 2.2rem 2fr;
+      font-size: 0.55rem;
+      padding: 0.25rem 0.3rem;
+      column-gap: 0.15rem;
     }
-    .header { flex-wrap: wrap; gap: 0.4rem; }
-    .header .status { margin-left: 0; }
+    .src-header { font-size: 0.5rem; padding: 0.3rem 0.5rem; }
+    .src-cell-icon { font-size: 0.7rem; }
+    .top-section { padding: 0.5rem 0.6rem; margin-top: 0.6rem; }
+    .top-row { display: grid; grid-template-columns: 1fr 3rem 2.5rem; gap: 0.3rem; }
+    .top-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .top-bar { flex: 0 0 3rem; width: 3rem; }
+    .top-count { min-width: 0; text-align: right; }
+    .recent-row { gap: 0.4rem; font-size: 0.6rem; }
+    .recent-time { min-width: 0; }
+    .recent-source { min-width: 0; }
+    .header .logo { width: 8rem; height: 2.5rem; }
+    .footer::before { content: "━".repeat(20); }
   }
 </style>
 </head>

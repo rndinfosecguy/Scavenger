@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.3.0 — 2026-11-22
+
+### Added
+- **Mobile-responsive dashboard** — the dashboard now adapts to small screens (≤480px). Source table scrolls horizontally with proportionally scaled columns. Stat cards switch to 2-column layout. Top-detected bars use fixed widths for consistent alignment. Logo, padding, and font sizes scale down. No layout changes on desktop.
+
 ## 3.2.0 — 2026-11-20
 
 ### Added
