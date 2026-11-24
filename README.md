@@ -1,7 +1,7 @@
 # Scavenger - OSINT Bot
 ![image](scavenger_logo.png)
 
-**v3.3.0** — [CHANGELOG](CHANGELOG.md)
+**v3.4.0** — [CHANGELOG](CHANGELOG.md)
 
 Multi-source OSINT credential-leak crawler for paste sites.
 

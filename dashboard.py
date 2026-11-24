@@ -11,6 +11,7 @@ import time
 
 PORT = 8080
 HOST = "127.0.0.1"
+YEAR_SECONDS = 365 * 86400
 
 SOURCES = ["pastebin", "pastesio", "github", "dpaste", "pastecode", "gitlab", "ideone", "pastegg"]
 
@@ -58,10 +59,18 @@ def get_last_crawled(source):
             return (ts, "just now")
         elif elapsed < 3600:
             return (ts, str(int(elapsed // 60)) + "m ago")
-        else:
+        elif elapsed < 86400:
             hours = int(elapsed // 3600)
             mins = int((elapsed % 3600) // 60)
             return (ts, str(hours) + "h " + str(mins) + "m ago")
+        elif elapsed < YEAR_SECONDS:
+            days = int(elapsed // 86400)
+            hours = int((elapsed % 86400) // 3600)
+            return (ts, str(days) + "d " + str(hours) + "h ago")
+        else:
+            years = int(elapsed // YEAR_SECONDS)
+            days = int((elapsed % YEAR_SECONDS) // 86400)
+            return (ts, str(years) + "y " + str(days) + "d ago")
     except (FileNotFoundError, ValueError):
         return (0, "never")
 
@@ -184,8 +193,10 @@ def build_page():
                 ts = str(int(age // 60)) + "m ago"
             elif age < 86400:
                 ts = str(int(age // 3600)) + "h ago"
-            else:
+            elif age < YEAR_SECONDS:
                 ts = str(int(age // 86400)) + "d ago"
+            else:
+                ts = str(int(age // YEAR_SECONDS)) + "y ago"
             recent_html += (
                 '<div class="recent-row">'
                 + '<span class="recent-time">' + ts + '</span>'
@@ -565,7 +576,7 @@ if(rs&&d.recent&&d.recent.length){
 var h='<div class="top-header">recent detections</div>';
 for(var i=0;i<d.recent.length;i++){
 var r=d.recent[i],a=Date.now()/1e3-r.ts;
-var t=a<60?'just now':a<3600?Math.floor(a/60)+'m ago':a<86400?Math.floor(a/3600)+'h ago':Math.floor(a/86400)+'d ago';
+var t=a<60?'just now':a<3600?Math.floor(a/60)+'m ago':a<86400?Math.floor(a/3600)+'h ago':a<31536000?Math.floor(a/86400)+'d ago':Math.floor(a/31536000)+'y ago';
 h+='<div class="recent-row"><span class="recent-time">'+t+'</span><span class="recent-source">'+(I[r.source]||'')+' '+(D[r.source]||r.source)+'</span><span class="recent-label">'+r.label+'</span></div>';
 }
 rs.innerHTML=h;

@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.4.0 — 2026-11-24
+
+### Added
+- **Longer time units on the dashboard** — crawler status now shows days after 24h (`1d 3h ago`) and years after 365 days (`1y 35d ago`). Recent detections also roll up to years (`1y ago`).
+
 ## 3.3.0 — 2026-11-22
 
 ### Added
