@@ -7,11 +7,14 @@ import sqlite3
 import socketserver
 import ssl
 import subprocess
+import sys
+import threading
 import time
 
 PORT = 8080
 HOST = "127.0.0.1"
 YEAR_SECONDS = 365 * 86400
+CACHE_TTL = 15
 
 SOURCES = ["pastebin", "pastesio", "github", "dpaste", "pastecode", "gitlab", "ideone", "pastegg"]
 
@@ -20,6 +23,22 @@ DATA_DIRS = {
     "passwords": "data/files_with_passwords",
     "sensitive": "data/otherSensitivePastes",
 }
+
+_scan_cache = {}
+_scan_lock = threading.Lock()
+
+
+def _cached(key, builder):
+    """Return a cached builder result until CACHE_TTL expires."""
+    now = time.monotonic()
+    with _scan_lock:
+        hit = _scan_cache.get(key)
+        if hit and now < hit[0]:
+            return hit[1]
+    value = builder()
+    with _scan_lock:
+        _scan_cache[key] = (now + CACHE_TTL, value)
+    return value
 
 
 def count_files(path):
@@ -83,63 +102,47 @@ def source_is_online(source):
     return (time.time() - ts) < 3600
 
 
-def collect_top_types(limit=10):
-    """Walk sensitive/password dirs and count detection labels. Returns sorted list of (label, count)."""
-    from collections import Counter
-    counts = Counter()
-
+def _scan_detections():
+    """Walk password/sensitive dirs once and return (mtime, source, label, filename)."""
+    entries = []
     for source in SOURCES:
-        # Password dir — all files are email:password
-        try:
-            for f in os.listdir("data/files_with_passwords/" + source):
-                if os.path.isfile(os.path.join("data/files_with_passwords/" + source, f)):
-                    counts["email:password"] += 1
-        except FileNotFoundError:
-            pass
+        for key, fixed_label in (("passwords", "email:password"), ("sensitive", None)):
+            directory = DATA_DIRS[key] + "/" + source
+            try:
+                for f in os.listdir(directory):
+                    path = os.path.join(directory, f)
+                    if not os.path.isfile(path):
+                        continue
+                    if fixed_label:
+                        label = fixed_label
+                    else:
+                        label = f.rsplit("_", 1)[0] if "_" in f else f
+                        if not label:
+                            label = f
+                    entries.append((os.path.getmtime(path), source, label, f))
+            except FileNotFoundError:
+                pass
+    return entries
 
-        # Sensitive dir — filenames are {label}_{paste_id}
-        try:
-            for f in os.listdir("data/otherSensitivePastes/" + source):
-                if not os.path.isfile(os.path.join("data/otherSensitivePastes/" + source, f)):
-                    continue
-                # Label is everything before the last underscore
-                label = f.rsplit("_", 1)[0] if "_" in f else f
-                if label:
-                    counts[label] += 1
-        except FileNotFoundError:
-            pass
 
+def _detection_snapshot():
+    return _cached("detections", _scan_detections)
+
+
+def collect_top_types(limit=10):
+    """Count detection labels from the cached snapshot."""
+    from collections import Counter
+    counts = Counter(label for _, _, label, _ in _detection_snapshot())
     return counts.most_common(limit)
 
 
 def collect_recent(limit=10):
-    """Return the most recent detection entries sorted by file mtime."""
-    entries = []
-    for source in SOURCES:
-        # Password files (email:password)
-        try:
-            for f in os.listdir("data/files_with_passwords/" + source):
-                path = os.path.join("data/files_with_passwords/" + source, f)
-                if not os.path.isfile(path):
-                    continue
-                entries.append((os.path.getmtime(path), source, "email:password", f))
-        except FileNotFoundError:
-            pass
-        # Sensitive files (label_pasteId)
-        try:
-            for f in os.listdir("data/otherSensitivePastes/" + source):
-                path = os.path.join("data/otherSensitivePastes/" + source, f)
-                if not os.path.isfile(path):
-                    continue
-                label = f.rsplit("_", 1)[0] if "_" in f else f
-                entries.append((os.path.getmtime(path), source, label, f))
-        except FileNotFoundError:
-            pass
-    entries.sort(key=lambda x: x[0], reverse=True)
+    """Return the most recent detection entries from the cached snapshot."""
+    entries = sorted(_detection_snapshot(), key=lambda x: x[0], reverse=True)
     return entries[:limit]
 
 
-def collect_stats():
+def _collect_stats():
     rows = []
     totals = {"raw": 0, "passwords": 0, "sensitive": 0}
 
@@ -154,6 +157,10 @@ def collect_stats():
 
     pio_attempts = count_pastesio_attempts()
     return rows, totals, pio_attempts
+
+
+def collect_stats():
+    return _cached("stats", _collect_stats)
 
 
 def build_page():
@@ -218,19 +225,19 @@ def build_page():
         label = display_names[name]
         online = source_is_online(name)
         row_class = " src-row-offline" if not online else ""
-        status_dot = "<span class=\"dot-online\">● online</span>" if online else "<span class=\"dot-offline\">● offline</span>"
+        status_dot = "<span class=\"dot-online\" data-field=\"state\">● online</span>" if online else "<span class=\"dot-offline\" data-field=\"state\">● offline</span>"
         _, last_str = get_last_crawled(name)
         tries = " <span class=\"attempts\">[" + fm(pio) + " tries]</span>" if name == "pastesio" and pio else ""
         sources_rows += (
-            "<div class=\"src-row" + row_class + "\">"
+            "<div class=\"src-row" + row_class + "\" data-source=\"" + name + "\">"
             + "<span class=\"src-cell src-cell-icon\">" + icons[name] + "</span>"
             + "<span class=\"src-cell src-cell-name\">" + label + tries + "</span>"
-            + "<span class=\"src-cell src-cell-num\">" + fm(raw) + "</span>"
-            + "<span class=\"src-cell src-cell-num pw\">" + fm(pw) + "</span>"
-            + "<span class=\"src-cell src-cell-num sec\">" + fm(sec) + "</span>"
+            + "<span class=\"src-cell src-cell-num\" data-field=\"raw\">" + fm(raw) + "</span>"
+            + "<span class=\"src-cell src-cell-num pw\" data-field=\"pw\">" + fm(pw) + "</span>"
+            + "<span class=\"src-cell src-cell-num sec\" data-field=\"sec\">" + fm(sec) + "</span>"
             + "<span class=\"src-cell src-cell-tail\">"
             + status_dot
-            + "<span class=\"crawled-at\">" + last_str + "</span>"
+            + "<span class=\"crawled-at\" data-field=\"last\">" + last_str + "</span>"
             + "</span>"
             + "</div>\n"
         )
@@ -571,15 +578,30 @@ var c=function(x){return x.toLocaleString('en')};
 document.getElementById('total-raw').textContent=c(d.totals.raw);
 document.getElementById('total-pw').textContent=c(d.totals.pw);
 document.getElementById('total-sec').textContent=c(d.totals.sec);
+function setField(row,name,value){var el=row.querySelector('[data-field="'+name+'"]');if(el)el.textContent=value;}
+if(d.sources)for(var i=0;i<d.sources.length;i++){
+var s=d.sources[i],row=document.querySelector('[data-source="'+s.name+'"]');
+if(!row)continue;
+row.classList.toggle('src-row-offline',!s.online);
+setField(row,'raw',c(s.raw));
+setField(row,'pw',c(s.pw));
+setField(row,'sec',c(s.sec));
+setField(row,'last',s.last);
+var dot=row.querySelector('[data-field="state"]');
+if(dot){dot.className=s.online?'dot-online':'dot-offline';dot.textContent=s.online?'● online':'● offline';}
+}
 var rs=document.getElementById('recent-section');
-if(rs&&d.recent&&d.recent.length){
+if(rs){
+var recent=d.recent||[];
+if(recent.length){
 var h='<div class="top-header">recent detections</div>';
-for(var i=0;i<d.recent.length;i++){
-var r=d.recent[i],a=Date.now()/1e3-r.ts;
+for(var j=0;j<recent.length;j++){
+var r=recent[j],a=Date.now()/1e3-r.ts;
 var t=a<60?'just now':a<3600?Math.floor(a/60)+'m ago':a<86400?Math.floor(a/3600)+'h ago':a<31536000?Math.floor(a/86400)+'d ago':Math.floor(a/31536000)+'y ago';
 h+='<div class="recent-row"><span class="recent-time">'+t+'</span><span class="recent-source">'+(I[r.source]||'')+' '+(D[r.source]||r.source)+'</span><span class="recent-label">'+r.label+'</span></div>';
 }
-rs.innerHTML=h;
+rs.innerHTML=h;rs.style.display='';
+}else{rs.innerHTML='';rs.style.display='none';}
 }
 }).catch(function(e){});
 setTimeout(f,60000)})();
@@ -693,22 +715,32 @@ class _SSLServer(socketserver.ThreadingTCPServer):
             raise OSError("SSL handshake failed")
 
 
-cert = "logs/dashboard.pem"
-if not os.path.exists(cert):
-    subprocess.run([
-        "openssl", "req", "-x509", "-newkey", "rsa:2048", "-keyout", cert,
-        "-out", cert, "-days", "3650", "-nodes",
-        "-subj", "/CN=localhost",
-    ], capture_output=True)
+def _run():
+    cert = "logs/dashboard.pem"
+    if not os.path.exists(cert):
+        subprocess.run([
+            "openssl", "req", "-x509", "-newkey", "rsa:2048", "-keyout", cert,
+            "-out", cert, "-days", "3650", "-nodes",
+            "-subj", "/CN=localhost",
+        ], capture_output=True)
 
-httpd = _SSLServer((HOST, PORT), Handler, cert)
+    httpd = _SSLServer((HOST, PORT), Handler, cert)
 
-print("dashboard: https://" + HOST + ":" + str(PORT))
-try:
-    while True:
-        httpd.handle_request()
-except KeyboardInterrupt:
-    ts = datetime.datetime.now().strftime("%H:%M:%S")
-    print("\n" + ts + " shutting down dashboard...")
-    httpd.server_close()
-    sys.exit(0)
+    def _shutdown(sig, frame):
+        raise KeyboardInterrupt()
+
+    signal.signal(signal.SIGTERM, _shutdown)
+
+    print("dashboard: https://" + HOST + ":" + str(PORT))
+    try:
+        while True:
+            httpd.handle_request()
+    except KeyboardInterrupt:
+        ts = datetime.datetime.now().strftime("%H:%M:%S")
+        print("\n" + ts + " shutting down dashboard...")
+        httpd.server_close()
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    _run()

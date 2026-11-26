@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.5.1 — 2026-11-26
+
+### Fixed
+- **Dashboard health in `--status`** — the dashboard row now shows `online` only when its tmux session exists and `https://127.0.0.1:8080/` responds. A running session with no HTTP response shows `unreachable`; no session shows `offline`.
+
+## 3.5.0 — 2026-11-26
+
+### Added
+- **Live dashboard source table** — per-source counts, online state, and last-crawled text now refresh through `/api/stats` without a page reload.
+- **Control-script lifecycle commands** — `--status`, `--stop`, `--restart`, and `--version`. Starting an already-running session now reports `already running` instead of a tmux error. `--stop`/`--restart` with no source flags apply to all managed sessions.
+
+### Changed
+- **Dashboard scan caching** — detection, top-type, recent, and stat scans share a 15s cache, avoiding repeated filesystem walks on each request.
+- **Refresh interval docs** — dashboard documentation is now consistently 60s.
+
+### Fixed
+- **Dashboard shutdown** — added the missing `sys` import, `SIGTERM` handling, and an `if __name__ == "__main__"` guard around server startup.
+
 ## 3.4.0 — 2026-11-24
 
 ### Added

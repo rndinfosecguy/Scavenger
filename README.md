@@ -1,7 +1,7 @@
 # Scavenger - OSINT Bot
 ![image](scavenger_logo.png)
 
-**v3.4.0** — [CHANGELOG](CHANGELOG.md)
+**v3.5.1** — [CHANGELOG](CHANGELOG.md)
 
 Multi-source OSINT credential-leak crawler for paste sites.
 
@@ -79,13 +79,25 @@ Scripts can also be run directly:
 python3 scrapers/scraper_pastebin_archive.py
 ```
 
+Inspect, stop, or restart managed sessions without attaching:
+
+```console
+python3 scavenger.py --status
+python3 scavenger.py --status -a -t
+python3 scavenger.py --stop -a -t
+python3 scavenger.py --restart -a
+python3 scavenger.py --version
+```
+
+`--stop` and `--restart` with no source flags apply to every managed session. For the dashboard, `--status` also checks `https://127.0.0.1:8080/` over HTTPS and reports `unreachable` if the tmux session exists but the site does not respond.
+
 ## Dashboard
 
 ```console
 python3 scavenger.py -D
 ```
 
-HTTPS at `https://127.0.0.1:8080`, auto-refreshes every 30s.
+HTTPS at `https://127.0.0.1:8080`, auto-refreshes every 60s.
 
 ## Config
 
